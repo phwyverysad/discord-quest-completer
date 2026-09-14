@@ -7,6 +7,7 @@
 [![Languages](https://img.shields.io/badge/Languages-TH%20%7C%20EN-5c5ce0?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer/releases/latest)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean%20%2F%20Safe-brightgreen?style=flat-square&logo=virustotal&logoColor=white)](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1)
 
 </div>
 
@@ -38,6 +39,8 @@ Discord Quest Completer คือโปรแกรมสำหรับรั�
 | **`Discord Quest Completer_1.0.0_x64-setup.exe`** | **~5.8 MB** | **ตัวติดตั้งมาตรฐาน (Setup)** ติดตั้งลงระบบและสร้างช็อตคัทบนเดสก์ท็อปให้อัตโนมัติ |
 | **`discord-quest-completer.exe`** | **~19 MB** | **โปรแกรมตัวเต็มแบบ Portable** พกพาเปิดใช้งานได้ทันทีไม่ต้องติดตั้ง |
 | **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **ไฟล์ติดตั้งระบบ (MSI)** สำหรับการติดตั้งในระดับระบบ Windows |
+
+> 🛡️ **ความปลอดภัย (VirusTotal)**: ตรวจสอบผลการสแกนไวรัสแล้ว ปลอดภัย 100% ไร้มัลแวร์ ดูรายงานฉบับเต็มได้ที่ [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1)
 
 ---
 
