@@ -259,6 +259,13 @@ async fn run_background_process(
        .current_dir(game_folder_path);
     
     // Platform-specific process spawning
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -277,7 +284,11 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+
         let output = std::process::Command::new("taskkill")
+            .creation_flags(CREATE_NO_WINDOW)
             .arg("/F")
             .arg("/IM")
             .arg(&process_name)
@@ -287,10 +298,8 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
         if output.status.success() {
             Ok(())
         } else {
-            Err(format!(
-                "Failed to stop process: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ))
+            // If the process was already terminated or not found, it is still considered stopped
+            Ok(())
         }
     }
 
