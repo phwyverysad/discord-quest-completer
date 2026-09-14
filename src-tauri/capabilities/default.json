@@ -18,10 +18,19 @@
           "url": "https://discord.com"
         },
         {
+          "url": "https://cdn.discordapp.com"
+        },
+        {
+          "url": "https://*.discordapp.com"
+        },
+        {
+          "url": "https://*.discord.com"
+        },
+        {
           "url": "http://asset.localhost"
         },
         {
-          "url": " http://tauri.localhost"
+          "url": "http://tauri.localhost"
         }
       ]
     },

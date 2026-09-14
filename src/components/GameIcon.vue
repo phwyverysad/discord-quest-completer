@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import type { Game } from '@/types/types';
-import { getGameIconUrl } from '@/services/icon-service';
+import { getGameIconUrl, resolveAppIcon } from '@/services/icon-service';
 
 const props = withDefaults(
   defineProps<{
@@ -18,17 +18,32 @@ const props = withDefaults(
 const hasError = ref(false);
 const isLoaded = ref(false);
 
-watch(
-  () => [props.game?.id, props.game?.icon_hash, props.game?.icon_url],
-  () => {
-    hasError.value = false;
-    isLoaded.value = false;
-  }
-);
-
 const iconUrl = computed(() => {
   return getGameIconUrl(props.game);
 });
+
+watch(
+  iconUrl,
+  (newUrl) => {
+    hasError.value = false;
+    isLoaded.value = false;
+  },
+  { immediate: true }
+);
+
+function onImageLoad() {
+  isLoaded.value = true;
+  hasError.value = false;
+}
+
+function onImageError() {
+  hasError.value = true;
+  isLoaded.value = false;
+  // If image failed to load, try resolving fresh hash from Discord API
+  if (props.game?.id) {
+    resolveAppIcon(props.game.id, true);
+  }
+}
 
 const sizeClasses = computed(() => {
   switch (props.size) {
@@ -69,19 +84,7 @@ const fallbackColor = computed(() => {
     class="relative shrink-0 overflow-hidden shadow-2xs border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center select-none"
     :class="[sizeClasses, customClass]"
   >
-    <!-- Actual Image from Discord CDN -->
-    <img
-      v-if="iconUrl && !hasError"
-      :src="iconUrl"
-      :alt="game.name"
-      loading="lazy"
-      @load="isLoaded = true"
-      @error="hasError = true"
-      class="w-full h-full object-cover transition-opacity duration-200"
-      :class="isLoaded ? 'opacity-100' : 'opacity-0'"
-    />
-
-    <!-- Fallback when image is missing or loading/failed -->
+    <!-- Fallback badge underneath -->
     <div
       v-if="!iconUrl || hasError || !isLoaded"
       class="absolute inset-0 flex items-center justify-center font-bold text-white"
@@ -95,5 +98,19 @@ const fallbackColor = computed(() => {
         <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z" />
       </svg>
     </div>
+
+    <!-- Actual Image from Discord CDN -->
+    <img
+      v-if="iconUrl && !hasError"
+      :src="iconUrl"
+      :alt="game?.name || 'Game'"
+      loading="eager"
+      decoding="async"
+      referrerpolicy="no-referrer"
+      @load="onImageLoad"
+      @error="onImageError"
+      class="relative w-full h-full object-cover transition-opacity duration-150"
+      :class="isLoaded ? 'opacity-100' : 'opacity-0'"
+    />
   </div>
 </template>

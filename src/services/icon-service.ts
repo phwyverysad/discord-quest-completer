@@ -40,16 +40,20 @@ const inFlightRequests = new Map<string, Promise<string | null>>();
 /**
  * Resolves the Discord application icon URL, querying Discord RPC API if needed.
  */
-export async function resolveAppIcon(appId: string): Promise<string | null> {
+export async function resolveAppIcon(appId: string, force = false): Promise<string | null> {
   if (!appId) return null;
 
   const cleanId = appId.trim();
   const cached = appIconCache[cleanId];
-  if (cached?.iconHash) {
-    return `https://cdn.discordapp.com/app-icons/${cleanId}/${cached.iconHash}.png?size=128`;
-  }
-  if (cached?.iconUrl) {
-    return cached.iconUrl;
+  if (!force && cached) {
+    if (cached.iconHash) {
+      return `https://cdn.discordapp.com/app-icons/${cleanId}/${cached.iconHash}.png?size=128`;
+    }
+    if (cached.iconUrl) {
+      return cached.iconUrl;
+    }
+    // If previously recorded as failed, avoid spamming unless forced
+    return null;
   }
 
   // Deduplicate network requests
@@ -108,25 +112,25 @@ export function getGameIconUrl(game: Game | null | undefined): string | null {
     return game.icon_url;
   }
 
-  // 2. Known icon hash from detectable.json or previous fetch
+  // 2. Check reactive cache first (e.g. if freshly resolved)
+  if (game.id && appIconCache[game.id]) {
+    const cached = appIconCache[game.id];
+    if (cached.iconHash) {
+      return `https://cdn.discordapp.com/app-icons/${game.id}/${cached.iconHash}.png?size=128`;
+    }
+    if (cached.iconUrl) {
+      return cached.iconUrl;
+    }
+  }
+
+  // 3. Known icon hash from detectable.json or initial data
   if (game.icon_hash && game.id) {
     return `https://cdn.discordapp.com/app-icons/${game.id}/${game.icon_hash}.png?size=128`;
   }
 
-  // 3. Check reactive cache
-  if (game.id) {
-    const cached = appIconCache[game.id];
-    if (cached?.iconHash) {
-      return `https://cdn.discordapp.com/app-icons/${game.id}/${cached.iconHash}.png?size=128`;
-    }
-    if (cached?.iconUrl) {
-      return cached.iconUrl;
-    }
-
-    // 4. Trigger auto-resolution in background if not yet cached
-    if (!cached && !inFlightRequests.has(game.id)) {
-      resolveAppIcon(game.id);
-    }
+  // 4. Trigger auto-resolution in background if not yet cached
+  if (game.id && !appIconCache[game.id] && !inFlightRequests.has(game.id)) {
+    resolveAppIcon(game.id);
   }
 
   return null;
