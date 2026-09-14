@@ -1,1 +1,99 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Discord Iconic Vibrant Palette */
+  --color-blurple-50: #EEF0FE;
+  --color-blurple-100: #E0E3FD;
+  --color-blurple-200: #C7CDFC;
+  --color-blurple-300: #A5AFFA;
+  --color-blurple-400: #7D88F7;
+  --color-blurple-500: #5865F2;
+  --color-blurple-600: #4752C4;
+  --color-blurple-700: #3C45A5;
+  --color-blurple-800: #323989;
+  --color-blurple-900: #2B306F;
+  --color-blurple-950: #1B1E46;
+
+  /* NEXTPURE Palette (Swatches: #C0C3DA, #8C99B6, #F8D6D9, #F4BFC5) */
+  --color-peri-50: #F7F8FC;
+  --color-peri-100: #EEF0F8;
+  --color-peri-200: #DEE1EF;
+  --color-peri-300: #C0C3DA;
+  --color-peri-400: #A5B0C8;
+  --color-peri-500: #8C99B6;
+  --color-peri-600: #7180A0;
+  --color-peri-700: #576585;
+  --color-peri-800: #3E4B68;
+  --color-peri-900: #253047;
+  --color-peri-950: #0E131F;
+
+  /* Blush & Rose Pink Accents */
+  --color-blush-50: #FDF6F7;
+  --color-blush-100: #FCEDEF;
+  --color-blush-200: #F8D6D9;
+  --color-blush-300: #F4BFC5;
+  --color-blush-400: #EAA0A9;
+  --color-blush-500: #D87F8A;
+  --color-blush-600: #BE5F6B;
+  --color-blush-700: #9E4550;
+  --color-blush-800: #7E333C;
+  --color-blush-900: #572027;
+
+  /* Pastel mapping for backward compatibility */
+  --color-pastel-50: #F7F8FC;
+  --color-pastel-100: #EEF0F8;
+  --color-pastel-200: #DEE1EF;
+  --color-pastel-300: #C0C3DA;
+  --color-pastel-400: #A5B0C8;
+  --color-pastel-500: #8C99B6;
+  --color-pastel-600: #7180A0;
+  --color-pastel-700: #576585;
+  --color-pastel-800: #3E4B68;
+  --color-pastel-900: #253047;
+  --color-pastel-950: #0E131F;
+}
+
+:root {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  letter-spacing: -0.012em;
+}
+
+/* Smooth theme transitions */
+*, ::before, ::after {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Subtle sleek scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+}

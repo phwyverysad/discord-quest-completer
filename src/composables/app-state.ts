@@ -4,6 +4,7 @@ import { computed, ComputedRef, Ref, ShallowRef, shallowRef } from 'vue'
 export const Pages = {
     HOME: 'home',
     PLAYGROUND: 'playground',
+    SETTINGS: 'settings',
 } as const
 export type Pages = typeof Pages[keyof typeof Pages]
 export interface AppLogObject {
@@ -11,6 +12,12 @@ export interface AppLogObject {
     message: string;
     timestamp: Date;
 }
+export interface DiscordTargets {
+    stable: boolean;
+    ptb: boolean;
+    canary: boolean;
+}
+
 export interface UseGlobalStateReturn {
     page: ShallowRef<Pages>,
     count: ShallowRef<number>,
@@ -23,6 +30,10 @@ export interface UseGlobalStateReturn {
         (newLog: string): void;
     };
     clearLogs: () => void,
+    discordTargets: ShallowRef<DiscordTargets>,
+    setDiscordTarget: (client: 'stable' | 'ptb' | 'canary', value: boolean) => void,
+    activeRpcClients: ShallowRef<string[]>,
+    setActiveRpcClients: (clients: string[]) => void,
 }
 export const useGlobalState = createGlobalState(
   () => {
@@ -32,6 +43,14 @@ export const useGlobalState = createGlobalState(
     const logs = shallowRef<AppLogObject[]>([])
 
     const count = shallowRef(0)
+
+    const discordTargets = shallowRef<DiscordTargets>({
+      stable: true,
+      ptb: true,
+      canary: true,
+    })
+
+    const activeRpcClients = shallowRef<string[]>([])
 
     // getters
     const doubleCount = computed(() => count.value * 2)
@@ -45,14 +64,27 @@ export const useGlobalState = createGlobalState(
       page.value = newPage
     }
 
-    
+    function setDiscordTarget(client: 'stable' | 'ptb' | 'canary', value: boolean) {
+      discordTargets.value = {
+        ...discordTargets.value,
+        [client]: value,
+      }
+    }
+
+    function setActiveRpcClients(clients: string[]) {
+      activeRpcClients.value = clients
+    }
+
     function addLog(type: string | 'info' | 'error' | 'warning' | 'debug' , newLog?: string) {
       if (!newLog) {
         newLog = type;
         type = 'info';
       }
       const formattedLog = `${newLog}`;
-      logs.value.push({ type: type as 'info' | 'error' | 'warning' | 'debug', message: formattedLog, timestamp: new Date() });
+      logs.value = [
+        ...logs.value,
+        { type: type as 'info' | 'error' | 'warning' | 'debug', message: formattedLog, timestamp: new Date() }
+      ];
     }
 
     function clearLogs() {
@@ -67,7 +99,11 @@ export const useGlobalState = createGlobalState(
         increment,
         logs,
         addLog,
-        clearLogs
+        clearLogs,
+        discordTargets,
+        setDiscordTarget,
+        activeRpcClients,
+        setActiveRpcClients,
     } as UseGlobalStateReturn
   }
 )

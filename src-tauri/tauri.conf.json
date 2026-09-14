@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Discord Quest Completer",
-  "version": "25.4.18",
+  "version": "1.0.0",
   "identifier": "me.markterence.discordquestcompleter",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -13,8 +13,13 @@
     "windows": [
       {
         "title": "Discord Quest Completer",
-        "width": 800,
-        "height": 600
+        "width": 940,
+        "height": 660,
+        "minWidth": 800,
+        "minHeight": 580,
+        "decorations": false,
+        "shadow": true,
+        "maximized": true
       }
     ],
     "security": {

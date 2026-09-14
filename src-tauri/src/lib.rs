@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{path::BaseDirectory, AppHandle, Emitter, Listener, Manager};
 
+mod multi_ipc;
 mod rpc;
 mod runner;
 
@@ -40,11 +41,14 @@ fn bundle_binary_name(app_name: &str) -> String {
         .to_string()
 }
 
-fn game_folder_path(exe_dir: &Path, path: &str, app_id: i64) -> PathBuf {
+fn get_base_games_dir() -> PathBuf {
+    env::temp_dir().join("discord-quest-completer").join("games")
+}
+
+fn game_folder_path(path: &str, app_id: i64) -> PathBuf {
     let normalized_path = Path::new(path).to_string_lossy().to_string();
 
-    exe_dir
-        .join("games")
+    get_base_games_dir()
         .join(app_id.to_string())
         .join(normalized_path)
 }
@@ -141,16 +145,12 @@ async fn create_fake_game(
     handle: tauri::AppHandle,
     path: &str,
     executable_name: &str,
-    path_len: i64,
+    _path_len: i64,
     app_id: i64,
     display_name: Option<String>,
 ) -> Result<String, String> {
     // Must create in the same directory as the executable to avoid permission issues
-    // Get the executable directory to look for config file
-    let exe_path: std::path::PathBuf = env::current_exe().unwrap_or_default();
-    let exe_dir = exe_path.parent().unwrap_or_else(|| Path::new(""));
-
-    let game_folder_path = game_folder_path(exe_dir, path, app_id);
+    let game_folder_path = game_folder_path(path, app_id);
 
     println!("Game folder path: {:?}", game_folder_path);
     println!(
@@ -232,13 +232,10 @@ async fn run_background_process(
     name: &str,
     path: &str,
     executable_name: &str,
-    path_len: i64,
+    _path_len: i64,
     app_id: i64,
 ) -> Result<String, String> {
-    let exe_path = env::current_exe().unwrap_or_default();
-    let exe_dir = exe_path.parent().unwrap_or_else(|| Path::new(""));
-
-    let game_folder_path = game_folder_path(exe_dir, path, app_id);
+    let game_folder_path = game_folder_path(path, app_id);
 
     if is_app_bundle(executable_name) {
         #[cfg(target_os = "macos")]
@@ -351,75 +348,133 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
 /// ```javascript
 /// await invoke('connect_to_discord_rpc_3', json, 'connect' | 'disconnect');
 #[tauri::command(rename_all = "snake_case")]
-fn connect_to_discord_rpc_3(handle: AppHandle, activity_json: String, action: String) {
+fn connect_to_discord_rpc_3(
+    handle: AppHandle,
+    activity_json: String,
+    _action: String,
+    target_clients: Option<Vec<String>>,
+) {
     let app = handle.clone();
 
     let event_connecting = "client_connecting";
     let event_connected = "client_connected";
     let event_disconnect = "event_disconnect";
-    let event_connect = "event_connect";
 
-    let activity = runner::parse_activity_json(&activity_json).unwrap();
+    let activity = match runner::parse_activity_json(&activity_json) {
+        Ok(a) => a,
+        Err(e) => {
+            eprintln!("Failed to parse activity: {}", e);
+            return;
+        }
+    };
+
+    let app_id = activity.app_id.clone();
+    let targets = target_clients.unwrap_or_default();
 
     let connecting_payload = serde_json::json!({
-        "app_id": activity.app_id,
+        "app_id": app_id,
     });
 
-    let client_option = {
+    {
         let mut client_guard = get_discord_client().lock().unwrap();
-        // Take the client out, leaving None in its place
-        client_guard.take()
-        // MutexGuard is dropped here at the end of scope
-    };
+        client_guard.take();
+    }
 
     let task = tauri::async_runtime::spawn(async move {
         handle
             .emit(event_connecting, connecting_payload)
             .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
 
-        let client = runner::set_activity(activity_json)
-            .await
-            .map_err(|e| {
-                println!("Failed to set activity: {}", e);
-            })
-            .unwrap();
+        let mut act_map = serde_json::Map::new();
+        if let Some(details) = &activity.details {
+            act_map.insert("details".to_string(), serde_json::json!(details));
+        }
+        if let Some(state) = &activity.state {
+            act_map.insert("state".to_string(), serde_json::json!(state));
+        }
+        if let Some(ts) = activity.timestamp {
+            act_map.insert("timestamps".to_string(), serde_json::json!({ "start": ts }));
+        }
+        let act_kind = activity.activity_kind.unwrap_or(0);
+        act_map.insert("type".to_string(), serde_json::json!(act_kind));
 
-        let connected_payload = serde_json::json!({
-            "app_id": activity.app_id,
-        });
-
-        {
-            let mut client_guard = get_discord_client().lock().unwrap();
-            *client_guard = Some(client);
+        if let Some(key) = &activity.large_image_key {
+            let mut assets = serde_json::Map::new();
+            assets.insert("large_image".to_string(), serde_json::json!(key));
+            if let Some(txt) = &activity.large_image_text {
+                assets.insert("large_text".to_string(), serde_json::json!(txt));
+            }
+            act_map.insert("assets".to_string(), serde_json::Value::Object(assets));
         }
 
-        handle
-            .emit(event_connected, connected_payload)
-            .unwrap_or_else(|e| {
-                eprintln!("Failed to emit event: {}", e);
+        let activity_val = serde_json::Value::Object(act_map);
+
+        let connected_clients = multi_ipc::set_multi_activity(&app_id, activity_val, &targets).await;
+
+        if !connected_clients.is_empty() {
+            let connected_payload = serde_json::json!({
+                "app_id": app_id,
+                "active_clients": connected_clients,
             });
 
-        handle.listen(event_disconnect, move |_| {
-            println!("Disconnecting from Discord RPC inner");
-            let disconnect_task = tauri::async_runtime::spawn(async move {
-                let client_option = {
-                    let mut client_guard = get_discord_client().lock().unwrap();
-                    // Take the client out, leaving None in its place
-                    client_guard.take()
-                    // MutexGuard is dropped here at the end of scope
-                };
-                if let Some(client) = client_option {
-                    client.discord.disconnect().await;
-                    println!("Disconnected from Discord RPC inner");
-                }
+            handle
+                .emit(event_connected, connected_payload)
+                .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
+
+            handle.listen(event_disconnect, move |_| {
+                println!("Disconnecting from Discord RPC (multi_ipc)");
+                let _ = tauri::async_runtime::spawn(async move {
+                    multi_ipc::disconnect_all().await;
+                });
             });
-            // disconnect_task.abort();
-        });
+        } else {
+            // Fallback to discord-sdk
+            match runner::set_activity(activity_json).await {
+                Ok(client) => {
+                    let connected_payload = serde_json::json!({
+                        "app_id": app_id,
+                        "active_clients": vec!["Discord"],
+                    });
+
+                    {
+                        let mut client_guard = get_discord_client().lock().unwrap();
+                        *client_guard = Some(client);
+                    }
+
+                    handle
+                        .emit(event_connected, connected_payload)
+                        .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
+
+                    handle.listen(event_disconnect, move |_| {
+                        let _ = tauri::async_runtime::spawn(async move {
+                            multi_ipc::disconnect_all().await;
+                            let client_opt = {
+                                let mut client_guard = get_discord_client().lock().unwrap();
+                                client_guard.take()
+                            };
+                            if let Some(client) = client_opt {
+                                client.discord.disconnect().await;
+                            }
+                        });
+                    });
+                }
+                Err(e) => {
+                    eprintln!("Failed to set activity: {}", e);
+                    let error_payload = serde_json::json!({
+                        "app_id": app_id,
+                        "error": e,
+                    });
+                    let _ = handle.emit("client_error", error_payload);
+                }
+            }
+        }
     });
 
     app.listen(event_disconnect, move |_| {
-        println!("Disconnecting from Discord RPC...");
         task.abort();
+        let _ = tauri::async_runtime::spawn(async move {
+            multi_ipc::disconnect_all().await;
+        });
     });
 }
 
@@ -435,6 +490,218 @@ async fn fetch_gamelist_from_discord() -> tauri::ipc::Response {
     tauri::ipc::Response::new(res.unwrap().text().await.unwrap())
 }
 
+#[tauri::command(rename_all = "snake_case")]
+async fn fetch_discord_quest(quest_id: String) -> Result<String, String> {
+    let url = format!("https://discord.com/api/v9/quests/{}", quest_id.trim());
+    let client = tauri_plugin_http::reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .map_err(|e| format!("Failed to initialize HTTP client: {}", e))?;
+
+    let res = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("Discord Quest not found or unavailable (HTTP {})", res.status()));
+    }
+
+    res.text().await.map_err(|e| format!("Failed to read response body: {}", e))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn fetch_discord_application(app_id: String) -> Result<String, String> {
+    let url = format!("https://discord.com/api/v9/applications/{}/rpc", app_id.trim());
+    let client = tauri_plugin_http::reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .map_err(|e| format!("Failed to initialize HTTP client: {}", e))?;
+
+    let res = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("Discord Application not found (HTTP {})", res.status()));
+    }
+
+    res.text().await.map_err(|e| format!("Failed to read response body: {}", e))
+}
+
+#[derive(serde::Serialize)]
+pub struct GamesFolderStats {
+    pub count: usize,
+    pub total_size_bytes: u64,
+    pub path: String,
+}
+
+fn dir_size_and_count(dir: &Path) -> (usize, u64) {
+    let mut count = 0;
+    let mut total_size = 0;
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let (sub_count, sub_size) = dir_size_and_count(&path);
+                count += sub_count;
+                total_size += sub_size;
+            } else if path.is_file() {
+                count += 1;
+                if let Ok(meta) = entry.metadata() {
+                    total_size += meta.len();
+                }
+            }
+        }
+    }
+    (count, total_size)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn get_games_folder_stats() -> Result<GamesFolderStats, String> {
+    let games_dir = get_base_games_dir();
+    if !games_dir.exists() {
+        let _ = fs::create_dir_all(&games_dir);
+    }
+    let (count, total_size) = dir_size_and_count(&games_dir);
+    Ok(GamesFolderStats {
+        count,
+        total_size_bytes: total_size,
+        path: games_dir.to_string_lossy().to_string(),
+    })
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn open_games_folder() -> Result<String, String> {
+    let games_dir = get_base_games_dir();
+    if !games_dir.exists() {
+        fs::create_dir_all(&games_dir).map_err(|e| format!("Failed to create games folder: {}", e))?;
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(&games_dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open Explorer: {}", e))?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&games_dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&games_dir)
+            .spawn()
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+
+    Ok(games_dir.to_string_lossy().to_string())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn clear_games_folder() -> Result<usize, String> {
+    let games_dir = get_base_games_dir();
+    let mut removed = 0;
+
+    if games_dir.exists() {
+        if let Ok(entries) = fs::read_dir(&games_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    if fs::remove_dir_all(&path).is_ok() {
+                        removed += 1;
+                    }
+                } else if path.is_file() {
+                    if fs::remove_file(&path).is_ok() {
+                        removed += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Also clean up any legacy games directory next to executable if it exists
+    let exe_path: PathBuf = env::current_exe().unwrap_or_default();
+    if let Some(exe_dir) = exe_path.parent() {
+        let legacy_dir = exe_dir.join("games");
+        if legacy_dir.exists() && legacy_dir != games_dir {
+            let _ = fs::remove_dir_all(&legacy_dir);
+        }
+    }
+
+    Ok(removed)
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Default, Clone, Debug)]
+pub struct DiscordClientsStatus {
+    pub stable: bool,
+    pub ptb: bool,
+    pub canary: bool,
+}
+
+#[tauri::command(rename_all = "snake_case")]
+fn check_discord_clients() -> DiscordClientsStatus {
+    let mut status = DiscordClientsStatus::default();
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        if let Ok(output) = std::process::Command::new("tasklist")
+            .args(["/FI", "IMAGENAME eq Discord*", "/FO", "CSV", "/NH"])
+            .creation_flags(CREATE_NO_WINDOW)
+            .output()
+        {
+            let text = String::from_utf8_lossy(&output.stdout).to_lowercase();
+            status.stable = text.contains("\"discord.exe\"");
+            status.ptb = text.contains("\"discordptb.exe\"");
+            status.canary = text.contains("\"discordcanary.exe\"");
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(output) = std::process::Command::new("pgrep")
+            .arg("-l")
+            .arg("-i")
+            .arg("discord")
+            .output()
+        {
+            let text = String::from_utf8_lossy(&output.stdout).to_lowercase();
+            status.canary = text.contains("canary");
+            status.ptb = text.contains("ptb");
+            status.stable = (text.contains("discord.app") || text.contains("discord")) && !status.canary && !status.ptb;
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(output) = std::process::Command::new("pgrep")
+            .arg("-a")
+            .arg("-i")
+            .arg("discord")
+            .output()
+        {
+            let text = String::from_utf8_lossy(&output.stdout).to_lowercase();
+            status.canary = text.contains("canary");
+            status.ptb = text.contains("ptb");
+            status.stable = text.contains("discord") && !status.canary && !status.ptb;
+        }
+    }
+
+    status
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -448,7 +715,13 @@ pub fn run() {
             connect_to_discord_rpc_3,
             run_background_process,
             fetch_gamelist_gh_mirror,
-            fetch_gamelist_from_discord
+            fetch_gamelist_from_discord,
+            fetch_discord_quest,
+            fetch_discord_application,
+            get_games_folder_stats,
+            open_games_folder,
+            clear_games_folder,
+            check_discord_clients
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

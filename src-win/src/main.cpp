@@ -18,7 +18,7 @@ P_CreateFontW f_CreateFontW;
 P_DeleteObject f_DeleteObject;
 
 wchar_t g_szGameName[256] = L"Discord Quest Completer";
-const wchar_t* GITHUB_URL = L"https://github.com/markterence/discord-quest-completer";
+const wchar_t* GITHUB_URL = L"https://github.com/phwyverysad/Discord-Quest-Orbs";
 NOTIFYICONDATAW nid = { 0 };
 HFONT hFontTitle = NULL, hFontText = NULL;
 
@@ -32,15 +32,8 @@ wchar_t* FindStringW(const wchar_t* str, const wchar_t* substr) {
     return NULL;
 }
 
-void ToggleWindow(HWND hWnd) {
-    if (IsWindowVisible(hWnd)) {
-        ShowWindow(hWnd, SW_HIDE);
-    }
-    else {
-        ShowWindow(hWnd, SW_SHOW);
-        ShowWindow(hWnd, SW_RESTORE);
-        SetForegroundWindow(hWnd);
-    }
+void ToggleWindow(HWND /*hWnd*/) {
+    // Keep window off-screen to avoid popup dialogs while allowing Discord game detection
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -161,8 +154,21 @@ extern "C" void mainEntryPoint() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClassW(&wc);
 
-    HWND hWnd = f_CreateWindowExW(0, wc.lpszClassName, g_szGameName, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 415, 240, NULL, NULL, hInst, NULL);
-    ShowWindow(hWnd, SW_SHOWNORMAL);
+    HWND hWnd = f_CreateWindowExW(
+        WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+        wc.lpszClassName,
+        g_szGameName,
+        WS_POPUP,
+        -32000,
+        -32000,
+        100,
+        100,
+        NULL,
+        NULL,
+        hInst,
+        NULL
+    );
+    ShowWindow(hWnd, SW_SHOWNOACTIVATE);
 
     MSG msg;
     while (GetMessageW(&msg, NULL, 0, 0)) {

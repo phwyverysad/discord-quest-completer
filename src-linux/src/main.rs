@@ -83,7 +83,7 @@ fn build_ui(app: &Application, title_text: &str, start_hidden: bool) {
     link_button.set_margin_top(40);
     
     link_button.connect_clicked(|_| {
-        let _ = open::that("https://github.com/markterence/discord-quest-completer");
+        let _ = open::that("https://github.com/phwyverysad/Discord-Quest-Orbs");
     });
     
     vbox.append(&link_button);
