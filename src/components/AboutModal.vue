@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import IconDiscord from './IconDiscord.vue';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { useI18n } from '@/composables/i18n';
 
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
+
+const { t } = useI18n();
 
 async function openGitHub() {
   try {
@@ -55,22 +58,22 @@ async function openGitHub() {
 
       <!-- Description -->
       <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4 font-normal">
-        โปรแกรมช่วยทำเควสต์เกม Discord อัตโนมัติ ปลอดภัย ใช้งานง่าย พร้อมระบบ Auto-Pilot สลับเล่นหลายเกมและตรวจจับสถานะแบบ Real-time
+        {{ t.aboutModalDesc }}
       </p>
 
       <!-- Quick Feature Tips -->
       <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/80 dark:border-slate-800 space-y-2 mb-5 text-xs text-slate-600 dark:text-slate-300">
         <div class="flex items-center gap-2 text-[11px]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
-          <span><b>ลากแถบด้านบน:</b> เพื่อขยับย้ายหน้าต่างได้อิสระ</span>
+          <span>{{ t.aboutTipDrag }}</span>
         </div>
         <div class="flex items-center gap-2 text-[11px]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
-          <span><b>ปุ่มปักหมุด (Pin):</b> ล็อกหน้าต่างให้อยู่บนสุดตลอดเวลา</span>
+          <span>{{ t.aboutTipPin }}</span>
         </div>
         <div class="flex items-center gap-2 text-[11px]">
           <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
-          <span><b>Auto-Pilot:</b> สลับเกมให้อัตโนมัติตามระยะเวลาที่เลือก</span>
+          <span>{{ t.aboutTipAutoPilot }}</span>
         </div>
       </div>
 
@@ -89,7 +92,7 @@ async function openGitHub() {
           @click="emit('close')"
           class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#5865F2] hover:bg-[#4752C4] active:bg-[#3C45A5] active:scale-95 shadow-xs transition-all cursor-pointer"
         >
-          ตกลง
+          {{ t.aboutModalOk }}
         </button>
       </div>
     </div>

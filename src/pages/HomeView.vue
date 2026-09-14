@@ -73,11 +73,11 @@ onMounted(async () => {
       (event) => {
         if (event.payload?.active_clients && event.payload.active_clients.length > 0) {
           setActiveRpcClients(event.payload.active_clients);
-          addLog('info', `[Discord RPC] แสดงผลใน: Discord ${event.payload.active_clients.join(', Discord ')}`);
+          addLog('info', `[Discord RPC] ${t.value.rpcBroadcastingIn}: Discord ${event.payload.active_clients.join(', Discord ')}`);
         } else {
           const list = getSelectedDiscordTargets();
           setActiveRpcClients(list);
-          addLog('info', `[Discord RPC] แสดงผลใน: Discord ${list.join(', Discord ')}`);
+          addLog('info', `[Discord RPC] ${t.value.rpcBroadcastingIn}: Discord ${list.join(', Discord ')}`);
         }
       }
     );
@@ -939,7 +939,7 @@ provide<GameActionsProvider>(GameActionsKey, {
           <svg class="w-4 h-4 animate-spin text-[#5865F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span class="hidden sm:inline">{{ t.fetchingQuest || 'กำลังดึงเควสต์...' }}</span>
+          <span class="hidden sm:inline">{{ t.fetchingQuest }}</span>
         </div>
 
         <!-- Refresh Game List Button: Solid Clean Discord Blurple -->
@@ -980,12 +980,12 @@ provide<GameActionsProvider>(GameActionsKey, {
             <svg class="w-5 h-5 animate-spin text-[#5865F2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span>{{ t.fetchingQuest || 'กำลังดึงข้อมูลเควสต์จาก Discord...' }}</span>
+            <span>{{ t.fetchingQuest }}</span>
           </div>
 
           <!-- 2. Quest Error State -->
           <div v-else-if="questFetchError" class="p-4 text-center bg-rose-50/50 dark:bg-rose-950/20 text-rose-500">
-            <div class="text-xs font-bold mb-0.5">{{ t.questNotFound || 'ไม่พบข้อมูลเควสต์ หรือลิงก์ไม่ถูกต้อง' }}</div>
+            <div class="text-xs font-bold mb-0.5">{{ t.questNotFound }}</div>
             <div class="text-[11px] text-slate-400 font-mono">{{ questFetchError }}</div>
           </div>
 

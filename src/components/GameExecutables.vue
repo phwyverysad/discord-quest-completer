@@ -1,7 +1,7 @@
 <template>
   <div class="text-slate-600 dark:text-slate-300 space-y-3">
     <p v-if="isMac" class="text-xs text-slate-500 dark:text-slate-400">
-      A small game window opens while playing. Discord on macOS usually only detects apps with a visible window.
+      {{ t.macOsWindowTip }}
     </p>
 
     <div v-if="filteredExecutables.length > 0" class="flex items-center justify-between">
@@ -9,16 +9,16 @@
         {{ t.selectExecutableToLaunch }}
       </h3>
       <span class="text-[11px] text-slate-400 font-mono">
-        {{ filteredExecutables.length }} {{ filteredExecutables.length > 1 ? 'executables' : 'executable' }}
+        {{ filteredExecutables.length }} {{ filteredExecutables.length > 1 ? t.executableUnitPlural : t.executableUnitSingle }}
       </span>
     </div>
 
     <p v-if="usingCrossPlatformFallback" class="text-xs text-amber-600 dark:text-amber-400">
-      No macOS executable is registered for this game. Using the Windows executable name as a fallback.
+      {{ t.crossPlatformFallbackTip }}
     </p>
 
     <p v-if="filteredExecutables.length === 0" class="text-xs text-amber-500">
-      No launchable executables registered for your platform ({{ currentPlatform }}).
+      {{ t.noExecutablesForPlatform }} ({{ currentPlatform }}).
     </p>
 
     <!-- Executable Cards with Big, Beautiful Play Buttons -->

@@ -38,10 +38,10 @@ export interface Translations {
   addGameToList: string;
   id: string;
   executables: string;
-  questFoundTitle?: string;
-  fetchingQuest?: string;
-  questTargetDuration?: string;
-  questNotFound?: string;
+  questFoundTitle: string;
+  fetchingQuest: string;
+  questTargetDuration: string;
+  questNotFound: string;
   
   // Games section
   gamesTitle: string;
@@ -159,6 +159,65 @@ export interface Translations {
   discordStableLabel: string;
   discordPtbLabel: string;
   discordCanaryLabel: string;
+
+  // Window TitleBar Controls & Tooltips
+  titlebarUnpin: string;
+  titlebarPin: string;
+  titlebarTheme: string;
+  titlebarAbout: string;
+  titlebarMinimize: string;
+  titlebarRestore: string;
+  titlebarMaximize: string;
+  titlebarClose: string;
+
+  // About Modal
+  aboutModalTitle: string;
+  aboutModalDesc: string;
+  aboutTipDrag: string;
+  aboutTipPin: string;
+  aboutTipAutoPilot: string;
+  aboutModalOk: string;
+
+  // Discord Status & Clients (Sidebar)
+  statusRunning: string;
+  statusOffline: string;
+  statusRpcActive: string;
+  discordStatusTitle: string;
+  discordStableDesc: string;
+  discordPtbDesc: string;
+  discordCanaryDesc: string;
+
+  // Logs & RPC Runtime Messages
+  rpcBroadcastingIn: string;
+
+  // Game Executables & Platform Disclaimers
+  macOsWindowTip: string;
+  crossPlatformFallbackTip: string;
+  noExecutablesForPlatform: string;
+  executableUnitSingle: string;
+  executableUnitPlural: string;
+
+  // Playground & Custom Simulator
+  playgroundSubtitle: string;
+  playgroundSimulatorTitle: string;
+  playgroundBadge: string;
+  discordAppIdLabel: string;
+  activityTypeLabel: string;
+  detailsLineLabel: string;
+  stateLineLabel: string;
+  actPlaying: string;
+  actListening: string;
+  actWatching: string;
+  actCompeting: string;
+
+  // Settings & Sound Details
+  preferencesAndAudioBadge: string;
+  officialRelease: string;
+  discordPtbSubDesc: string;
+  discordCanarySubDesc: string;
+  customSoundItem: string;
+  previewTitle: string;
+  deleteTitle: string;
 }
 
 const enTranslations: Translations = {
@@ -289,7 +348,66 @@ const enTranslations: Translations = {
   discordRpcTargetsDesc: 'Select which Discord apps to broadcast rich presence to',
   discordStableLabel: 'Discord Stable',
   discordPtbLabel: 'Discord PTB',
-  discordCanaryLabel: 'Discord Canary'
+  discordCanaryLabel: 'Discord Canary',
+
+  // Window TitleBar Controls & Tooltips
+  titlebarUnpin: 'Unpin (Disable Always on Top)',
+  titlebarPin: 'Pin (Always on Top)',
+  titlebarTheme: 'Toggle Theme (Light / Dark)',
+  titlebarAbout: 'Help & About',
+  titlebarMinimize: 'Minimize',
+  titlebarRestore: 'Restore',
+  titlebarMaximize: 'Maximize',
+  titlebarClose: 'Close',
+
+  // About Modal
+  aboutModalTitle: 'Discord Quest Completer',
+  aboutModalDesc: 'Lightweight tool to complete Discord Quests automatically and safely with multi-game Auto-Pilot rotation and real-time status detection.',
+  aboutTipDrag: 'Drag TitleBar: Freely reposition and move the application window.',
+  aboutTipPin: 'Pin Button: Lock window always on top of other applications.',
+  aboutTipAutoPilot: 'Auto-Pilot: Automatically rotates through queued games on a timer.',
+  aboutModalOk: 'OK',
+
+  // Discord Status & Clients (Sidebar)
+  statusRunning: 'Running',
+  statusOffline: 'Offline',
+  statusRpcActive: 'RPC ACTIVE',
+  discordStatusTitle: 'Discord Status',
+  discordStableDesc: 'Discord Stable (Official)',
+  discordPtbDesc: 'Discord Public Test Build (PTB)',
+  discordCanaryDesc: 'Discord Canary (Testing Build)',
+
+  // Logs & RPC Runtime Messages
+  rpcBroadcastingIn: 'Broadcasting in',
+
+  // Game Executables & Platform Disclaimers
+  macOsWindowTip: 'A small game window opens while playing. Discord on macOS usually only detects apps with a visible window.',
+  crossPlatformFallbackTip: 'No macOS executable is registered for this game. Using the Windows executable name as a fallback.',
+  noExecutablesForPlatform: 'No launchable executables registered for your platform',
+  executableUnitSingle: 'executable',
+  executableUnitPlural: 'executables',
+
+  // Playground & Custom Simulator
+  playgroundSubtitle: 'Experiment with custom Discord Rich Presence activity parameters and review live app logs.',
+  playgroundSimulatorTitle: 'Discord RPC Custom Simulator',
+  playgroundBadge: 'Testing & Logs',
+  discordAppIdLabel: 'Discord App / Client ID',
+  activityTypeLabel: 'Activity Type',
+  detailsLineLabel: 'Details Line',
+  stateLineLabel: 'State Line',
+  actPlaying: 'Playing',
+  actListening: 'Listening',
+  actWatching: 'Watching',
+  actCompeting: 'Competing',
+
+  // Settings & Sound Details
+  preferencesAndAudioBadge: 'Preferences & Audio',
+  officialRelease: 'Official Discord release',
+  discordPtbSubDesc: 'Discord Public Test Build',
+  discordCanarySubDesc: 'Discord Canary nightly build',
+  customSoundItem: 'Custom sound',
+  previewTitle: 'Preview',
+  deleteTitle: 'Delete'
 };
 
 const thTranslations: Translations = {
@@ -420,7 +538,66 @@ const thTranslations: Translations = {
   discordRpcTargetsDesc: 'เลือกไคลเอนต์ Discord ที่ต้องการส่ง Rich Presence',
   discordStableLabel: 'Discord Stable',
   discordPtbLabel: 'Discord PTB',
-  discordCanaryLabel: 'Discord Canary'
+  discordCanaryLabel: 'Discord Canary',
+
+  // Window TitleBar Controls & Tooltips
+  titlebarUnpin: 'ยกเลิกปักหมุดบนสุด',
+  titlebarPin: 'ปักหมุดหน้าต่างไว้บนสุด',
+  titlebarTheme: 'สลับโหมดสี (สว่าง / มืด)',
+  titlebarAbout: 'ช่วยเหลือและข้อมูลแอพ',
+  titlebarMinimize: 'ย่อหน้าต่าง',
+  titlebarRestore: 'คืนขนาดเดิม',
+  titlebarMaximize: 'ขยายเต็มจอ',
+  titlebarClose: 'ปิดหน้าต่าง',
+
+  // About Modal
+  aboutModalTitle: 'Discord Quest Completer',
+  aboutModalDesc: 'โปรแกรมช่วยทำเควสต์เกม Discord อัตโนมัติ ปลอดภัย ใช้งานง่าย พร้อมระบบ Auto-Pilot สลับเล่นหลายเกมและตรวจจับสถานะแบบ Real-time',
+  aboutTipDrag: 'ลากแถบด้านบน: เพื่อขยับย้ายหน้าต่างได้อิสระ',
+  aboutTipPin: 'ปุ่มปักหมุด (Pin): ล็อกหน้าต่างให้อยู่บนสุดตลอดเวลา',
+  aboutTipAutoPilot: 'Auto-Pilot: สลับเกมให้อัตโนมัติตามระยะเวลาที่เลือก',
+  aboutModalOk: 'ตกลง',
+
+  // Discord Status & Clients (Sidebar)
+  statusRunning: 'กำลังทำงาน',
+  statusOffline: 'ออฟไลน์',
+  statusRpcActive: 'RPC ACTIVE',
+  discordStatusTitle: 'สถานะ Discord',
+  discordStableDesc: 'Discord Stable (เวอร์ชันทางการ)',
+  discordPtbDesc: 'Discord Public Test Build (PTB)',
+  discordCanaryDesc: 'Discord Canary (เวอร์ชันทดสอบ)',
+
+  // Logs & RPC Runtime Messages
+  rpcBroadcastingIn: 'แสดงผลใน',
+
+  // Game Executables & Platform Disclaimers
+  macOsWindowTip: 'หน้าต่างเกมจำลองขนาดเล็กจะเปิดขึ้นขณะเล่น เนื่องจาก Discord บน macOS มักจะตรวจจับเฉพาะแอพที่มีหน้าต่างปรากฏ',
+  crossPlatformFallbackTip: 'ไม่มีไฟล์เรียกทำงานสำหรับ macOS สำหรับเกมนี้ ระบบจะใช้ชื่อไฟล์ของ Windows เป็นตัวสำรอง',
+  noExecutablesForPlatform: 'ไม่มีไฟล์เรียกทำงานสำหรับระบบปฏิบัติการของคุณ',
+  executableUnitSingle: 'ไฟล์',
+  executableUnitPlural: 'ไฟล์',
+
+  // Playground & Custom Simulator
+  playgroundSubtitle: 'ทดสอบส่งค่า Rich Presence (RPC) กำหนดเองไปยัง Discord และตรวจสอบบันทึกการทำงานแบบเรียลไทม์',
+  playgroundSimulatorTitle: 'จำลอง Discord RPC กำหนดเอง',
+  playgroundBadge: 'การทดสอบและบันทึก',
+  discordAppIdLabel: 'ไอดีแอพพลิเคชัน Discord (App ID)',
+  activityTypeLabel: 'ประเภทกิจกรรม (Activity Type)',
+  detailsLineLabel: 'ข้อความบรรทัดที่ 1 (Details)',
+  stateLineLabel: 'ข้อความบรรทัดที่ 2 (State)',
+  actPlaying: 'กำลังเล่น (Playing)',
+  actListening: 'กำลังฟัง (Listening)',
+  actWatching: 'กำลังดู (Watching)',
+  actCompeting: 'กำลังแข่งขัน (Competing)',
+
+  // Settings & Sound Details
+  preferencesAndAudioBadge: 'การตั้งค่าและเสียง',
+  officialRelease: 'เวอร์ชันทางการของ Discord',
+  discordPtbSubDesc: 'Discord เวอร์ชัน Public Test Build',
+  discordCanarySubDesc: 'Discord Canary เวอร์ชันทดสอบรอบดึก',
+  customSoundItem: 'เสียงกำหนดเอง',
+  previewTitle: 'ฟังตัวอย่าง',
+  deleteTitle: 'ลบ'
 };
 
 const jaTranslations: Translations = {

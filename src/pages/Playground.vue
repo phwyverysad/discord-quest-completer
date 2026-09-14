@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
 import { useGlobalState } from '@/composables/app-state';
 import { useI18n } from '@/composables/i18n';
 import CustomDropdown, { type DropdownOption } from '@/components/CustomDropdown.vue';
+
+const { logs, addLog, clearLogs, discordTargets } = useGlobalState();
+const { t } = useI18n();
 
 const ActivityKind = {
   Playing: 0,
@@ -13,21 +16,18 @@ const ActivityKind = {
   Competing: 5,
 } as const;
 
-const activityOptions: DropdownOption<number>[] = [
-  { value: ActivityKind.Playing, label: 'Playing' },
-  { value: ActivityKind.Listening, label: 'Listening' },
-  { value: ActivityKind.Watching, label: 'Watching' },
-  { value: ActivityKind.Competing, label: 'Competing' },
-];
+const activityOptions = computed<DropdownOption<number>[]>(() => [
+  { value: ActivityKind.Playing, label: t.value.actPlaying },
+  { value: ActivityKind.Listening, label: t.value.actListening },
+  { value: ActivityKind.Watching, label: t.value.actWatching },
+  { value: ActivityKind.Competing, label: t.value.actCompeting },
+]);
 
 const isConnected = ref(false);
 const appId = ref('1361728268088381706');
 const details = ref('Testing Discord Quest Completer');
 const state = ref('Quest In Progress');
 const selectedActivityKind = ref<number>(0);
-
-const { logs, addLog, clearLogs, discordTargets } = useGlobalState();
-const { t } = useI18n();
 
 const copied = ref(false);
 
@@ -100,11 +100,11 @@ function discordTest() {
               </h1>
               <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] border border-[#5865F2]/20 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
-                Testing & Logs
+                {{ t.playgroundBadge }}
               </span>
             </div>
             <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
-              Experiment with custom Discord Rich Presence activity parameters and review live app logs.
+              {{ t.playgroundSubtitle }}
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ function discordTest() {
     <div class="bg-white dark:bg-[#131927] rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border border-slate-200/90 dark:border-slate-800 transition-all space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-base font-bold text-slate-900 dark:text-white">
-          Discord RPC Custom Simulator
+          {{ t.playgroundSimulatorTitle }}
         </h2>
         <span
           class="px-2.5 py-1 text-xs rounded-full font-bold flex items-center gap-1.5 shadow-2xs"
@@ -128,7 +128,7 @@ function discordTest() {
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Discord App / Client ID</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ t.discordAppIdLabel }}</label>
           <input
             v-model="appId"
             type="text"
@@ -137,7 +137,7 @@ function discordTest() {
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Activity Type</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ t.activityTypeLabel }}</label>
           <CustomDropdown
             v-model="selectedActivityKind"
             :options="activityOptions"
@@ -145,7 +145,7 @@ function discordTest() {
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Details Line</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ t.detailsLineLabel }}</label>
           <input
             v-model="details"
             type="text"
@@ -154,7 +154,7 @@ function discordTest() {
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">State Line</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{{ t.stateLineLabel }}</label>
           <input
             v-model="state"
             type="text"

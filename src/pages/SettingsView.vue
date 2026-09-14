@@ -111,7 +111,7 @@ onMounted(() => {
               </h1>
               <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] border border-[#5865F2]/20 flex items-center gap-1.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
-                Preferences & Audio
+                {{ t.preferencesAndAudioBadge }}
               </span>
             </div>
             <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
@@ -209,9 +209,9 @@ onMounted(() => {
       </button>
     </div>
 
-    <!-- TAB 1: SOUNDS (เสียง) - Matching MultiRoblox design in full max-w-6xl -->
+    <!-- TAB 1: SOUNDS - Matching MultiRoblox design in full max-w-6xl -->
     <div v-show="activeTab === 'sound'" class="space-y-5">
-      <!-- Section 1: เสียงคลิก / โพรไฟล์เสียง -->
+      <!-- Section 1: Sound Profiles -->
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="mb-5">
           <div class="text-[11px] font-bold text-[#5865F2] dark:text-[#A5AFFA] uppercase tracking-wider mb-1">
@@ -290,7 +290,7 @@ onMounted(() => {
               <button
                 type="button"
                 @click.stop="previewSound(String(id))"
-                title="Preview"
+                :title="t.previewTitle"
                 class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none opacity-80 group-hover:opacity-100"
               >
                 <svg class="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
@@ -342,7 +342,7 @@ onMounted(() => {
                 <button
                   type="button"
                   @click.stop="previewCustom(custom.id)"
-                  title="Preview"
+                  :title="t.previewTitle"
                   class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none"
                 >
                   <svg class="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
@@ -352,7 +352,7 @@ onMounted(() => {
                 <button
                   type="button"
                   @click.stop="deleteCustomSound(custom.id)"
-                  title="Delete"
+                  :title="t.deleteTitle"
                   class="w-7 h-7 rounded-full bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-500 hover:text-white text-rose-500 flex items-center justify-center transition-colors cursor-pointer select-none"
                 >
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,14 +367,14 @@ onMounted(() => {
                 {{ custom.name }}
               </div>
               <div class="text-[11px] text-slate-400 dark:text-slate-500">
-                Custom sound
+                {{ t.customSoundItem }}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 2: เสียงกำหนดเอง / อัปโหลดของคุณเอง -->
+      <!-- Section 2: Custom Sound Profiles -->
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div class="flex items-center gap-4">
@@ -414,7 +414,7 @@ onMounted(() => {
         />
       </div>
 
-      <!-- Section 3: ระดับเสียง / ระดับเสียงคลิก -->
+      <!-- Section 3: Click Volume -->
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="mb-4">
           <div class="text-[11px] font-bold text-[#5865F2] dark:text-[#A5AFFA] uppercase tracking-wider mb-1">
@@ -450,7 +450,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- TAB 2: GENERAL (ทั่วไป) -->
+    <!-- TAB 2: GENERAL -->
     <div v-show="activeTab === 'general'" class="space-y-5">
       <!-- Storage & Cache Management Card -->
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
@@ -591,7 +591,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- TAB 3: LANGUAGE (ภาษา) -->
+    <!-- TAB 3: LANGUAGE -->
     <div v-show="activeTab === 'language'" class="space-y-5">
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
@@ -615,7 +615,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- TAB 4: THEME (ธีม) -->
+    <!-- TAB 4: THEME -->
     <div v-show="activeTab === 'theme'" class="space-y-5">
       <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
@@ -693,7 +693,7 @@ onMounted(() => {
                 {{ t.discordStableLabel }}
               </div>
               <div class="text-xs text-slate-400 mt-0.5">
-                Official Discord release
+                {{ t.officialRelease }}
               </div>
             </div>
             <button
@@ -716,7 +716,7 @@ onMounted(() => {
                 {{ t.discordPtbLabel }}
               </div>
               <div class="text-xs text-slate-400 mt-0.5">
-                Discord Public Test Build
+                {{ t.discordPtbSubDesc }}
               </div>
             </div>
             <button
@@ -739,7 +739,7 @@ onMounted(() => {
                 {{ t.discordCanaryLabel }}
               </div>
               <div class="text-xs text-slate-400 mt-0.5">
-                Discord Canary nightly build
+                {{ t.discordCanarySubDesc }}
               </div>
             </div>
             <button

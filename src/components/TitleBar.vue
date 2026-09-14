@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useAppSettings } from '@/composables/settings';
+import { useI18n } from '@/composables/i18n';
 import IconDiscord from './IconDiscord.vue';
 
 const emit = defineEmits<{
@@ -9,6 +10,7 @@ const emit = defineEmits<{
 }>();
 
 const { themeMode, setTheme } = useAppSettings();
+const { t } = useI18n();
 
 const appWindow = getCurrentWindow();
 const isPinned = ref(false);
@@ -104,7 +106,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="togglePin"
-          :title="isPinned ? 'Unpin (ยกเลิกปักหมุดบนสุด)' : 'Always on Top (ปักหมุดหน้าต่างไว้บนสุด)'"
+          :title="isPinned ? t.titlebarUnpin : t.titlebarPin"
           class="p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center"
           :class="[
             isPinned 
@@ -131,7 +133,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="toggleTheme"
-          title="Toggle Theme (เปลี่ยนโหมดสี สว่าง / มืด)"
+          :title="t.titlebarTheme"
           class="p-1.5 rounded-lg text-slate-400 hover:text-[#576585] dark:hover:text-slate-200 hover:bg-[#EEF0F8]/70 dark:hover:bg-[#1A2233] transition-colors cursor-pointer"
         >
           <!-- Sun icon in dark mode -->
@@ -156,7 +158,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="emit('open-about')"
-          title="Help & About (ช่วยเหลือและข้อมูลแอพ)"
+          :title="t.titlebarAbout"
           class="p-1.5 rounded-lg text-slate-400 hover:text-[#576585] dark:hover:text-slate-200 hover:bg-[#EEF0F8]/70 dark:hover:bg-[#1A2233] transition-colors cursor-pointer"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -176,7 +178,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="handleMinimize"
-          title="Minimize (ย่อหน้าต่าง)"
+          :title="t.titlebarMinimize"
           class="w-11 h-full flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-[#1C2436] active:bg-slate-300 dark:active:bg-[#253046] transition-colors cursor-pointer"
         >
           <svg class="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none" stroke="currentColor">
@@ -188,7 +190,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="handleToggleMaximize"
-          :title="isMaximized ? 'Restore (คืนขนาดเดิม)' : 'Maximize (ขยายเต็มจอ)'"
+          :title="isMaximized ? t.titlebarRestore : t.titlebarMaximize"
           class="w-11 h-full flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-[#1C2436] active:bg-slate-300 dark:active:bg-[#253046] transition-colors cursor-pointer"
         >
           <!-- Maximize Icon (Single Square) -->
@@ -206,7 +208,7 @@ onUnmounted(() => {
         <button
           type="button"
           @click.stop="handleClose"
-          title="Close (ปิดหน้าต่าง)"
+          :title="t.titlebarClose"
           class="w-11 h-full flex items-center justify-center text-slate-700 dark:text-slate-300 hover:bg-[#E81123] hover:text-white dark:hover:bg-[#E81123] dark:hover:text-white active:bg-[#C40E1E] transition-colors cursor-pointer"
         >
           <svg class="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none" stroke="currentColor">
