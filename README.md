@@ -20,7 +20,7 @@ Discord Quest Completer คือโปรแกรมสำหรับรั�
 
 ## วิดีโอสอนใช้งาน (Tutorial Video)
 
-https://github.com/phwyverysad/discord-quest-completer/raw/main/docs/tutorial.mp4
+https://github.com/user-attachments/assets/855b96be-8e35-4083-8735-f9754e9376c7
 
 ---
 
