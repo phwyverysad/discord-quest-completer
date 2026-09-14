@@ -21,6 +21,7 @@ export interface Game {
     icon_hash?: string | null;
     icon_url?: string | null;
     cover_image_hash?: string | null;
+    third_party_skus?: Array<{ distributor: string; id: string }>;
     quest_title?: string;
     quest_target_minutes?: number;
 }

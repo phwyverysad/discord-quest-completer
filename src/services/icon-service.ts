@@ -38,9 +38,9 @@ function saveCache() {
 const inFlightRequests = new Map<string, Promise<string | null>>();
 
 /**
- * Resolves the Discord application icon URL, querying Discord RPC API if needed.
+ * Resolves the Discord application icon URL, querying Discord RPC API or Steam Store API if needed.
  */
-export async function resolveAppIcon(appId: string, force = false): Promise<string | null> {
+export async function resolveAppIcon(appId: string, gameName?: string, force = false): Promise<string | null> {
   if (!appId) return null;
 
   const cleanId = appId.trim();
@@ -63,23 +63,54 @@ export async function resolveAppIcon(appId: string, force = false): Promise<stri
 
   const promise = (async () => {
     try {
-      const resStr = await invoke<string>('fetch_discord_application', { app_id: cleanId });
-      const data = JSON.parse(resStr);
-
       let iconHash: string | null = null;
       let iconUrl: string | null = null;
+      let executables: any[] = [];
 
-      if (data.icon) {
-        iconHash = data.icon;
-        iconUrl = `https://cdn.discordapp.com/app-icons/${cleanId}/${iconHash}.png?size=128`;
-      } else if (data.cover_image) {
-        iconUrl = `https://cdn.discordapp.com/app-assets/${cleanId}/${data.cover_image}.png?size=128`;
+      // 1. Try fetching from Discord RPC Application API
+      try {
+        const resStr = await invoke<string>('fetch_discord_application', { app_id: cleanId });
+        const data = JSON.parse(resStr);
+
+        executables = data.executables || [];
+
+        if (data.icon) {
+          iconHash = data.icon;
+          iconUrl = `https://cdn.discordapp.com/app-icons/${cleanId}/${iconHash}.png?size=128`;
+        } else if (data.cover_image) {
+          iconUrl = `https://cdn.discordapp.com/app-assets/${cleanId}/${data.cover_image}.png?size=128`;
+        } else if (data.third_party_skus && Array.isArray(data.third_party_skus)) {
+          const steamSku = data.third_party_skus.find((s: any) => s.distributor === 'steam');
+          if (steamSku?.id) {
+            iconUrl = `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${steamSku.id}/capsule_sm_120.jpg`;
+          }
+        }
+      } catch {}
+
+      // 2. If Discord has no icon and we have a game name, search Steam Store API fallback
+      if (!iconUrl && gameName) {
+        try {
+          const cleanName = gameName
+            .replace(/[\(\[\{].*?[\)\]\}]/g, '') // remove brackets like (Demo)
+            .replace(/:\s*CO-OP.*$/i, '')       // remove suffixes like ": CO-OP Deckbuilder"
+            .trim();
+          const steamResStr = await invoke<string>('fetch_steam_game_icon', { game_name: cleanName || gameName });
+          const steamData = JSON.parse(steamResStr);
+          if (steamData?.items && steamData.items.length > 0) {
+            const first = steamData.items[0];
+            if (first.tiny_image) {
+              iconUrl = first.tiny_image;
+            } else if (first.id) {
+              iconUrl = `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${first.id}/capsule_sm_120.jpg`;
+            }
+          }
+        } catch {}
       }
 
       appIconCache[cleanId] = {
         iconHash,
         iconUrl,
-        executables: data.executables || []
+        executables
       };
       saveCache();
 
@@ -128,9 +159,22 @@ export function getGameIconUrl(game: Game | null | undefined): string | null {
     return `https://cdn.discordapp.com/app-icons/${game.id}/${game.icon_hash}.png?size=128`;
   }
 
-  // 4. Trigger auto-resolution in background if not yet cached
+  // 4. Known cover image hash from detectable.json
+  if (game.cover_image_hash && game.id) {
+    return `https://cdn.discordapp.com/app-assets/${game.id}/${game.cover_image_hash}.png?size=128`;
+  }
+
+  // 5. Check if game has a Steam SKU directly in third_party_skus
+  if (game.third_party_skus && Array.isArray(game.third_party_skus)) {
+    const steamSku = game.third_party_skus.find((s: any) => s.distributor === 'steam');
+    if (steamSku?.id) {
+      return `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${steamSku.id}/capsule_sm_120.jpg`;
+    }
+  }
+
+  // 6. Trigger auto-resolution in background if not yet cached
   if (game.id && !appIconCache[game.id] && !inFlightRequests.has(game.id)) {
-    resolveAppIcon(game.id);
+    resolveAppIcon(game.id, game.name);
   }
 
   return null;

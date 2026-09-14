@@ -39,9 +39,9 @@ function onImageLoad() {
 function onImageError() {
   hasError.value = true;
   isLoaded.value = false;
-  // If image failed to load, try resolving fresh hash from Discord API
+  // If image failed to load, try resolving fresh hash or Steam image
   if (props.game?.id) {
-    resolveAppIcon(props.game.id, true);
+    resolveAppIcon(props.game.id, props.game.name, true);
   }
 }
 
@@ -59,23 +59,18 @@ const sizeClasses = computed(() => {
   }
 });
 
-const initialLetter = computed(() => {
-  if (!props.game?.name) return '?';
-  return props.game.name.trim().charAt(0).toUpperCase();
-});
-
-// Color palettes for fallback badges based on game ID
-const fallbackColors = [
-  'bg-[#5865F2]',
-  'bg-[#576585]',
-  'bg-[#7180A0]',
-  'bg-[#4752C4]',
-  'bg-[#4E5D94]'
+// Vibrant gradients for fallback badges based on game ID
+const fallbackGradients = [
+  'bg-gradient-to-br from-[#5865F2] to-[#4752C4]',
+  'bg-gradient-to-br from-[#576585] to-[#36393F]',
+  'bg-gradient-to-br from-[#4E5D94] to-[#2C2F33]',
+  'bg-gradient-to-br from-[#7289DA] to-[#5865F2]',
+  'bg-gradient-to-br from-[#4752C4] to-[#3C45A5]'
 ];
 
-const fallbackColor = computed(() => {
+const fallbackGradient = computed(() => {
   const idNum = parseInt(props.game?.id?.slice(-3) || '0', 10) || 0;
-  return fallbackColors[idNum % fallbackColors.length];
+  return fallbackGradients[idNum % fallbackGradients.length];
 });
 </script>
 
@@ -84,18 +79,14 @@ const fallbackColor = computed(() => {
     class="relative shrink-0 overflow-hidden shadow-2xs border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-center select-none"
     :class="[sizeClasses, customClass]"
   >
-    <!-- Fallback badge underneath -->
+    <!-- Fallback badge underneath: Sleek Game Controller -->
     <div
       v-if="!iconUrl || hasError || !isLoaded"
-      class="absolute inset-0 flex items-center justify-center font-bold text-white"
-      :class="fallbackColor"
+      class="absolute inset-0 flex items-center justify-center text-white"
+      :class="fallbackGradient"
     >
-      <!-- Controller SVG Icon if tiny or letter if normal -->
-      <span v-if="initialLetter" class="tracking-tight drop-shadow-2xs">
-        {{ initialLetter }}
-      </span>
-      <svg v-else class="w-1/2 h-1/2 fill-current opacity-90" viewBox="0 0 24 24">
-        <path d="M15 7.5V2H9v5.5l3 3 3-3zM7.5 9H2v6h5.5l3-3-3-3zM9 16.5V22h6v-5.5l-3-3-3 3zM16.5 9l-3 3 3 3H22V9h-5.5z" />
+      <svg class="w-1/2 h-1/2 text-white/90 drop-shadow-2xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 11h4m-2-2v4m7-2h.01M18 13h.01M5.05 6.05A7 7 0 0118.95 6.05l1.9 6.65A4 4 0 0117 17.5l-2.5-2.5h-5L7 17.5a4 4 0 01-3.85-4.8l1.9-6.65z" />
       </svg>
     </div>
 

@@ -558,6 +558,27 @@ async fn fetch_discord_application(app_id: String) -> Result<String, String> {
     res.text().await.map_err(|e| format!("Failed to read response body: {}", e))
 }
 
+#[tauri::command(rename_all = "snake_case")]
+async fn fetch_steam_game_icon(game_name: String) -> Result<String, String> {
+    let client = tauri_plugin_http::reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .map_err(|e| format!("Failed to initialize HTTP client: {}", e))?;
+
+    let res = client
+        .get("https://store.steampowered.com/api/storesearch/")
+        .query(&[("term", game_name.trim()), ("l", "english"), ("cc", "US")])
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {}", e))?;
+
+    if !res.status().is_success() {
+        return Err(format!("Steam search failed (HTTP {})", res.status()));
+    }
+
+    res.text().await.map_err(|e| format!("Failed to read response body: {}", e))
+}
+
 #[derive(serde::Serialize)]
 pub struct GamesFolderStats {
     pub count: usize,
@@ -744,6 +765,7 @@ pub fn run() {
             fetch_gamelist_from_discord,
             fetch_discord_quest,
             fetch_discord_application,
+            fetch_steam_game_icon,
             get_games_folder_stats,
             open_games_folder,
             clear_games_folder,

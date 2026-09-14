@@ -352,7 +352,7 @@ const enTranslations: Translations = {
   soundVolumeDesc: 'Drag to adjust click volume',
   discordRpcTargets: 'Target Discord Clients',
   discordRpcTargetsDesc: 'Select which Discord apps to broadcast rich presence to',
-  discordStableLabel: 'Discord Stable',
+  discordStableLabel: 'Discord',
   discordPtbLabel: 'Discord PTB',
   discordCanaryLabel: 'Discord Canary',
 
@@ -548,7 +548,7 @@ const thTranslations: Translations = {
   soundVolumeDesc: 'ลากเพื่อปรับความดังของเสียงคลิก',
   discordRpcTargets: 'ไคลเอนต์ Discord เป้าหมาย',
   discordRpcTargetsDesc: 'เลือกไคลเอนต์ Discord ที่ต้องการส่ง Rich Presence',
-  discordStableLabel: 'Discord Stable',
+  discordStableLabel: 'Discord',
   discordPtbLabel: 'Discord PTB',
   discordCanaryLabel: 'Discord Canary',
 

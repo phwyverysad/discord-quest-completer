@@ -135,7 +135,7 @@ const fuseOptions = computed<UseFuseOptions<Game>>(() => ({
         : value;
     },
     isCaseSensitive: false,
-    threshold: 0.5,
+    threshold: 0.35,
     includeScore: true,
     includeMatches: false,
   },
@@ -439,78 +439,7 @@ function removeGameFromList(game: Game) {
   }
 }
 
-// Drag and drop & manual reordering (HTML5 system with visual drop line)
-const draggedIndex = ref<number | null>(null);
-const dragOverIndex = ref<number | null>(null);
-const dropPosition = ref<'before' | 'after' | null>(null);
-
-function reorderGame(fromIndex: number, targetIndex: number, position: 'before' | 'after') {
-  if (fromIndex === targetIndex && position === (fromIndex === 0 ? 'before' : 'after')) return;
-
-  let toIndex = targetIndex;
-  if (position === 'after') {
-    toIndex = targetIndex + 1;
-  }
-  if (fromIndex < toIndex) {
-    toIndex -= 1;
-  }
-
-  if (fromIndex === toIndex) return;
-  if (fromIndex < 0 || fromIndex >= gameList.value.length) return;
-  if (toIndex < 0 || toIndex >= gameList.value.length) return;
-
-  const [moved] = gameList.value.splice(fromIndex, 1);
-  if (moved) {
-    gameList.value.splice(toIndex, 0, moved);
-    saveGameList();
-    try {
-      playClickSound();
-    } catch {}
-  }
-}
-
-// HTML5 Drag & Drop (WebView2 patched)
-function handleDragStart(index: number, event: DragEvent) {
-  draggedIndex.value = index;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.dropEffect = 'move';
-    event.dataTransfer.setData('text/plain', String(index));
-  }
-}
-
-function handleDragOver(index: number, event: DragEvent) {
-  event.preventDefault();
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'move';
-  }
-  if (draggedIndex.value === null || draggedIndex.value === index) {
-    dragOverIndex.value = null;
-    dropPosition.value = null;
-    return;
-  }
-  dragOverIndex.value = index;
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  const relY = event.clientY - rect.top;
-  dropPosition.value = relY < rect.height / 2 ? 'before' : 'after';
-}
-
-function handleDrop(targetIndex: number, event: DragEvent) {
-  event.preventDefault();
-  if (draggedIndex.value !== null && dropPosition.value !== null) {
-    reorderGame(draggedIndex.value, targetIndex, dropPosition.value);
-  }
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-  dropPosition.value = null;
-}
-
-function handleDragEnd() {
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-  dropPosition.value = null;
-}
-
+// Game Reordering (Move Up / Move Down buttons)
 function moveGameUp(index: number) {
   if (index > 0) {
     const item = gameList.value.splice(index, 1)[0];
@@ -1336,42 +1265,19 @@ provide<GameActionsProvider>(GameActionsKey, {
           </p>
         </div>
 
-        <!-- Selected Games List (with Drag-and-Drop & Reorder Controls) -->
+        <!-- Selected Games List (Clean Solid Cards with Reorder Controls) -->
         <div v-else class="space-y-2.5 overflow-y-auto max-h-[520px] pr-1">
           <div
             v-for="(game, index) in gameList"
             :key="game.uid"
-            :data-game-index="index"
-            draggable="true"
-            @dragstart="handleDragStart(index, $event)"
-            @dragover="handleDragOver(index, $event)"
-            @drop="handleDrop(index, $event)"
-            @dragend="handleDragEnd"
             @click="selectGame(game)"
-            class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 group relative select-none"
+            class="p-3.5 rounded-2xl border transition-colors cursor-pointer flex items-center gap-3 group relative select-none"
             :class="[
               selectedGame?.uid === game.uid
                 ? 'border-2 border-[#5865F2] bg-[#5865F2]/5 dark:bg-[#5865F2]/15 shadow-xs'
-                : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141A26] hover:bg-slate-50 dark:hover:bg-slate-800/60',
-              draggedIndex === index ? 'opacity-35 border-dashed border-[#5865F2] bg-[#5865F2]/5 scale-[0.99]' : ''
+                : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141A26] hover:bg-slate-50 dark:hover:bg-slate-800/60'
             ]"
           >
-            <!-- Drop Insertion Guideline: Before (Top) -->
-            <div
-              v-if="dragOverIndex === index && draggedIndex !== index && dropPosition === 'before'"
-              class="absolute -top-1.5 left-2 right-2 h-1 bg-[#5865F2] rounded-full shadow-[0_0_8px_rgba(88,101,242,0.9)] z-30 pointer-events-none flex items-center"
-            >
-              <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
-            </div>
-
-            <!-- Drop Insertion Guideline: After (Bottom) -->
-            <div
-              v-if="dragOverIndex === index && draggedIndex !== index && dropPosition === 'after'"
-              class="absolute -bottom-1.5 left-2 right-2 h-1 bg-[#5865F2] rounded-full shadow-[0_0_8px_rgba(88,101,242,0.9)] z-30 pointer-events-none flex items-center"
-            >
-              <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
-            </div>
-
             <!-- Game Icon from Discord CDN -->
             <GameIcon :game="game" size="md" />
 

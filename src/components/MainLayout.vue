@@ -197,7 +197,7 @@ onUnmounted(() => {
               <div class="flex items-center gap-2.5 min-w-0">
                 <img :src="discordStableIcon" alt="Discord Stable" class="w-5 h-5 rounded-full object-contain shrink-0 shadow-2xs" />
                 <span class="font-bold tracking-tight truncate text-xs" :class="discordClients.stable ? 'text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'">
-                  Discord Stable
+                  Discord
                 </span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
