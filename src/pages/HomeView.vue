@@ -439,11 +439,10 @@ function removeGameFromList(game: Game) {
   }
 }
 
-// Drag and drop & manual reordering (Dual Pointer & HTML5 system with visual drop line)
+// Drag and drop & manual reordering (HTML5 system with visual drop line)
 const draggedIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 const dropPosition = ref<'before' | 'after' | null>(null);
-const isPointerDragging = ref(false);
 
 function reorderGame(fromIndex: number, targetIndex: number, position: 'before' | 'after') {
   if (fromIndex === targetIndex && position === (fromIndex === 0 ? 'before' : 'after')) return;
@@ -470,102 +469,8 @@ function reorderGame(fromIndex: number, targetIndex: number, position: 'before' 
   }
 }
 
-// Pointer Events Dragging on Grip Handle
-let gripPointerId: number | null = null;
-let gripElement: HTMLElement | null = null;
-
-function onGripPointerDown(index: number, event: PointerEvent) {
-  if (event.button !== 0) return;
-  gripPointerId = event.pointerId;
-  gripElement = event.currentTarget as HTMLElement;
-  try {
-    gripElement.setPointerCapture(event.pointerId);
-  } catch {}
-
-  draggedIndex.value = index;
-  dragOverIndex.value = index;
-  dropPosition.value = null;
-  isPointerDragging.value = true;
-
-  window.addEventListener('pointermove', onWindowPointerMove);
-  window.addEventListener('pointerup', onWindowPointerUp);
-  window.addEventListener('pointercancel', onWindowPointerCancel);
-}
-
-function onWindowPointerMove(event: PointerEvent) {
-  if (!isPointerDragging.value || draggedIndex.value === null) return;
-
-  const cards = document.querySelectorAll<HTMLElement>('[data-game-index]');
-  if (!cards.length) return;
-
-  const clientY = event.clientY;
-  let found = false;
-
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    const rect = card.getBoundingClientRect();
-    const idx = parseInt(card.getAttribute('data-game-index') || '-1', 10);
-    if (idx === -1) continue;
-
-    if (clientY >= rect.top && clientY <= rect.bottom) {
-      dragOverIndex.value = idx;
-      dropPosition.value = clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) {
-    const firstRect = cards[0].getBoundingClientRect();
-    const lastRect = cards[cards.length - 1].getBoundingClientRect();
-    if (clientY < firstRect.top) {
-      dragOverIndex.value = 0;
-      dropPosition.value = 'before';
-    } else if (clientY > lastRect.bottom) {
-      dragOverIndex.value = gameList.value.length - 1;
-      dropPosition.value = 'after';
-    }
-  }
-}
-
-function onWindowPointerUp(event: PointerEvent) {
-  if (isPointerDragging.value && draggedIndex.value !== null && dragOverIndex.value !== null && dropPosition.value !== null) {
-    reorderGame(draggedIndex.value, dragOverIndex.value, dropPosition.value);
-  }
-  cleanupPointerDrag();
-}
-
-function onWindowPointerCancel() {
-  cleanupPointerDrag();
-}
-
-function cleanupPointerDrag() {
-  isPointerDragging.value = false;
-  draggedIndex.value = null;
-  dragOverIndex.value = null;
-  dropPosition.value = null;
-  if (gripElement && gripPointerId !== null) {
-    try {
-      gripElement.releasePointerCapture(gripPointerId);
-    } catch {}
-  }
-  gripElement = null;
-  gripPointerId = null;
-  window.removeEventListener('pointermove', onWindowPointerMove);
-  window.removeEventListener('pointerup', onWindowPointerUp);
-  window.removeEventListener('pointercancel', onWindowPointerCancel);
-}
-
-onUnmounted(() => {
-  cleanupPointerDrag();
-});
-
 // HTML5 Drag & Drop (WebView2 patched)
 function handleDragStart(index: number, event: DragEvent) {
-  if (isPointerDragging.value) {
-    event.preventDefault();
-    return;
-  }
   draggedIndex.value = index;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
@@ -1442,7 +1347,7 @@ provide<GameActionsProvider>(GameActionsKey, {
             @dragover="handleDragOver(index, $event)"
             @drop="handleDrop(index, $event)"
             @dragend="handleDragEnd"
-            @click="!isPointerDragging && selectGame(game)"
+            @click="selectGame(game)"
             class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 group relative select-none"
             :class="[
               selectedGame?.uid === game.uid
@@ -1465,22 +1370,6 @@ provide<GameActionsProvider>(GameActionsKey, {
               class="absolute -bottom-1.5 left-2 right-2 h-1 bg-[#5865F2] rounded-full shadow-[0_0_8px_rgba(88,101,242,0.9)] z-30 pointer-events-none flex items-center"
             >
               <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
-            </div>
-
-            <!-- Dedicated Drag Grip Handle (Left side) -->
-            <div
-              @pointerdown.stop="onGripPointerDown(index, $event)"
-              :title="t.dragToReorder"
-              class="w-7 h-9 flex items-center justify-center rounded-xl text-slate-300 dark:text-slate-600 hover:text-[#5865F2] hover:bg-[#5865F2]/10 dark:hover:bg-[#5865F2]/20 cursor-grab active:cursor-grabbing transition-colors shrink-0 -ml-1 select-none"
-            >
-              <svg class="w-4 h-4 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="8.5" cy="6" r="1.5" />
-                <circle cx="15.5" cy="6" r="1.5" />
-                <circle cx="8.5" cy="12" r="1.5" />
-                <circle cx="15.5" cy="12" r="1.5" />
-                <circle cx="8.5" cy="18" r="1.5" />
-                <circle cx="15.5" cy="18" r="1.5" />
-              </svg>
             </div>
 
             <!-- Game Icon from Discord CDN -->
