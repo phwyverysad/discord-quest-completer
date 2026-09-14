@@ -1,100 +1,67 @@
-# Discord Quest Completer
-
 <div align="center">
 
 **โปรแกรมช่วยทำเควสต์เกม Discord อัตโนมัติ ปลอดภัย และไม่จำเป็นต้องติดตั้งตัวเกมจริง**
 
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/phwyverysad/discord-quest-completer)
-[![Framework](https://img.shields.io/badge/Framework-Tauri%202-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
-[![Frontend](https://img.shields.io/badge/Frontend-Vue%203%20%7C%20TailwindCSS-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-[![Backend](https://img.shields.io/badge/Backend-Rust-DEA584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/phwyverysad/discord-quest-completer)
+[![Built With](https://img.shields.io/badge/Built%20With-Tauri%202%20%7C%20Rust%20%7C%20Vue%203-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
+[![Languages](https://img.shields.io/badge/Languages-TH%20%7C%20EN-5c5ce0?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/phwyverysad/discord-quest-completer?style=flat-square&color=gold)](https://github.com/phwyverysad/discord-quest-completer/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/phwyverysad/discord-quest-completer?style=flat-square&color=orange)](https://github.com/phwyverysad/discord-quest-completer/issues)
-
-[ภาพรวม](#ภาพรวม) | [ฟีเจอร์หลัก](#ฟีเจอร์หลัก) | [การใช้งาน](#การใช้งาน) | [การคอมไพล์จาก Source Code](#การคอมไพล์จาก-source-code) | [ความปลอดภัยและประสิทธิภาพ](#ความปลอดภัยและประสิทธิภาพ) | [สัญญาอนุญาต](#สัญญาอนุญาต)
+[![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer/releases/latest)
 
 </div>
 
 ---
 
-## ภาพรวม
-
-**Discord Quest Completer** คือแอปพลิเคชันสำหรับ Windows ที่พัฒนาด้วย Tauri 2 (Rust + Vue 3) ออกแบบมาเพื่อจำลองสถานะการเล่นเกม (Rich Presence / RPC) และรัน Process เกมจำลองขนาดจิ๋ว ช่วยให้ผู้ใช้สามารถทำภารกิจ **Discord Quests** ได้จนจบโดยไม่จำเป็นต้องดาวน์โหลดหรือติดตั้งตัวเกมจริงขนาดใหญ่ ประหยัดพื้นที่จัดเก็บข้อมูล และมีระบบ Auto-Pilot สลับเกมให้อัตโนมัติ
-
----
-
-## ฟีเจอร์หลัก
-
-### การจำลองและทำเควสต์ Discord
-* **ค้นหาเกมหรือเควสต์ได้ทันที**: ค้นหารายชื่อเกม Discord ที่มีเควสต์ หรือวางลิงก์เควสต์เพื่อดึงข้อมูลเกมเข้าสู่ระบบได้ทันที
-* **จำลอง Process เกมขนาดจิ๋ว (Dummy Runner)**: สร้างและรัน Process เสมือนขนาดเล็กมาก เพื่อให้ระบบตรวจจับเกมของ Discord ตรวจพบว่ากำลังเล่นเกมจริง
-* **รองรับ Discord ทุกเวอร์ชันพร้อมกัน (Multi-Client RPC)**: ส่งสถานะ Rich Presence ไปยัง Discord Stable, Discord PTB และ Discord Canary ได้พร้อมกันแบบขนาน
-
-### ระบบทำงานอัตโนมัติ (Auto-Pilot)
-* **สลับคิวเกมอัตโนมัติ**: จัดลำดับคิวเกมที่ต้องการทำเควสต์ และปล่อยให้ระบบสลับเปิดแต่ละเกมตามเวลาที่ตั้งไว้ (5 นาที, 10 นาที, 15 นาที หรือ 20 นาที)
-* **แสดงแถบเวลาถอยหลัง (Progress Bar)**: ติดตามเวลาคงเหลือของแต่ละเกมในคิวแบบเรียลไทม์
-
-### ความปลอดภัยและความสะดวกในการใช้งาน
-* **แจ้งเตือนความเสี่ยง (RPC Risk Warning)**: มีระบบแจ้งเตือนและยืนยันก่อนเริ่มรัน RPC เพื่อความปลอดภัยของผู้ใช้
-* **หน้าต่างปรับแต่งได้ยืดหยุ่น**: รองรับการเปิดแบบ Maximized เต็มจอ, ปุ่มปักหมุดหน้าต่างให้อยู่บนสุด (Pin), และระบบภาษา (ไทย / อังกฤษ)
+## ภาพรวม (Overview)
+Discord Quest Completer คือโปรแกรมสำหรับรันและทำเควสต์ Discord อัตโนมัติบน Windows พัฒนาด้วย Tauri 2 (Rust + Vue 3) จำลองสถานะเกม (Rich Presence / RPC) และรัน Process เกมจำลองขนาดจิ๋ว (Dummy Runner) ช่วยให้ทำภารกิจ Discord Quests ได้จนจบโดยไม่จำเป็นต้องดาวน์โหลดหรือติดตั้งตัวเกมจริง พร้อมระบบ Auto-Pilot สลับคิวเกมให้อัตโนมัติ
 
 ---
 
-## การใช้งาน
-
-1. **ดาวน์โหลดและเปิดโปรแกรม**: ดาวน์โหลดไฟล์ `Discord Quest Completer_1.0.0_x64-setup.exe` หรือไฟล์ Portable `.exe` จากหน้า [Releases](https://github.com/phwyverysad/discord-quest-completer/releases)
-2. **เลือกหรือเพิ่มเกม**: ค้นหาชื่อเกมหรือเควสต์ที่ต้องการจากช่องค้นหาด้านบน แล้วกด **เพิ่มลงรายการเกม**
-3. **เริ่มเล่นเกมหรือทำเควสต์**: 
-   * **กดเล่นรายเกม**: คลิกปุ่ม **เล่น** ในการ์ดย่อยทางขวา กดยอมรับความเสี่ยง แล้วปล่อยให้โปรแกรมจำลองการเล่นตามเวลาที่เควสต์กำหนด
-   * **เปิดใช้งาน Auto-Pilot**: เลือกช่วงเวลาที่ต้องการ (เช่น 15m) แล้วกด **เริ่มทำงานอัตโนมัติ** ระบบจะรันเกมและหมุนเวียนคิวให้เองจนเสร็จสิ้น
-
----
-
-## การคอมไพล์จาก Source Code
-
-### สิ่งที่จำเป็นต้องมี
-* ระบบปฏิบัติการ Windows 10 หรือ Windows 11 (64-bit)
-* [Node.js](https://nodejs.org/) (เวอร์ชัน 18+ หรือ 20+) และ [pnpm](https://pnpm.io/)
-* [Rust](https://rustup.rs/) (พร้อม MSVC toolchain)
-* C++ Build Tools (สำหรับคอมไพล์ dummy runner)
-
-### ขั้นตอนการคอมไพล์
-1. คลอนคลังข้อมูล (Repository)
-   ```bash
-   git clone https://github.com/phwyverysad/discord-quest-completer.git
-   cd discord-quest-completer
-   ```
-
-2. ติดตั้ง Dependencies
-   ```bash
-   pnpm install
-   ```
-
-3. บิลด์ตัวรันจำลองเกม (Win Runner)
-   ```bash
-   pnpm build:runner:win
-   pnpm copy:runner:win
-   ```
-
-4. คอมไพล์โปรแกรมเป็นไฟล์ `.exe`
-   ```bash
-   pnpm tauri build
-   ```
-   *ไฟล์ `.exe` ที่ได้จะอยู่ในโฟลเดอร์ `src-tauri/target/release/` และตัวติดตั้งใน `src-tauri/target/release/bundle/nsis/`*
+## ฟีเจอร์เด่น (Key Features)
+* **Discord Quest Simulation**: จำลองสถานะเกมและเชื่อมต่อ Discord RPC โดยตรง ทำเควสต์สำเร็จได้โดยไม่ต้องติดตั้งตัวเกมจริง
+* **Ultra-Lightweight Dummy Runner**: ตัวจำลอง Process ขนาดจิ๋ว (~6 KB) พัฒนาด้วย Win32 API กินทรัพยากรเครื่องต่ำมาก แทบไม่ใช้ RAM และ CPU
+* **Multi-Client RPC**: รองรับการส่งสถานะไปยัง Discord ทุกรุ่นพร้อมกัน (Discord Stable, Discord PTB, Discord Canary)
+* **Auto-Pilot Mode**: ระบบสลับคิวทำเควสต์อัตโนมัติ ตั้งเวลาเล่นแต่ละเกมได้ (5m, 10m, 15m, 20m) พร้อมแถบเวลานับถอยหลังแบบเรียลไทม์
+* **Steam Icon Resolution Engine**: ดึงไอคอนเกม Steam แบบคมชัดอัตโนมัติหลายระดับ หมดปัญหาไอคอนเกมไม่แสดง
+* **Custom Game Queue & Reordering**: จัดการเพิ่ม ลบ และเรียงลำดับคิวเกมได้อย่างอิสระผ่านปุ่มเลื่อนขึ้น-ลง
+* **Multi-Language (i18n)**: รองรับ 2 ภาษา (ไทย และ อังกฤษ) สลับเปลี่ยนภาษาได้ทันทีแบบเรียลไทม์
+* **Modern Clean UI**: หน้าต่างโปรแกรมสไตล์มินิมอล รองรับ Dark Mode, หน้าต่าง Maximized และปุ่ม Pin ปักหมุดหน้าต่างบนสุด
+* **Safety & Privacy**: มีระบบยืนยันความเสี่ยง RPC ปลอดภัย 100% ไม่มีการเข้าถึงโทเคนหรือข้อมูลบัญชี Discord
 
 ---
 
-## ความปลอดภัยและประสิทธิภาพ
-* **กินทรัพยากรต่ำมาก**: ตัวจำลองเกม (Dummy Runner) เขียนด้วย C++ / Win32 API มีขนาดเพียงไม่กี่กิโลไบต์ ไม่กิน RAM และไม่เปลือง CPU
-* **ปลอดภัยและทำงานในเครื่อง (Local Only)**: ไม่มีการเก็บข้อมูลบัญชี ไม่มีการขโมยโทเคน Discord หรือส่งข้อมูลส่วนตัวใดๆ ออกนอกเครื่อง
+## ดาวน์โหลด (Downloads)
+ดาวน์โหลดเวอร์ชันล่าสุดได้ที่ [GitHub Releases](https://github.com/phwyverysad/discord-quest-completer/releases/latest):
+
+| ไฟล์ | ขนาด | รูปแบบการใช้งาน |
+| :--- | :---: | :--- |
+| **`Discord Quest Completer_1.0.0_x64-setup.exe`** | **~5.8 MB** | **ตัวติดตั้งมาตรฐาน (Setup)** ติดตั้งลงระบบและสร้างช็อตคัทบนเดสก์ท็อปให้อัตโนมัติ |
+| **`discord-quest-completer.exe`** | **~19 MB** | **โปรแกรมตัวเต็มแบบ Portable** พกพาเปิดใช้งานได้ทันทีไม่ต้องติดตั้ง |
+| **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **ไฟล์ติดตั้งระบบ (MSI)** สำหรับการติดตั้งในระดับระบบ Windows |
 
 ---
 
-## สัญญาอนุญาต
-โปรเจกต์นี้เผยแพร่ภายใต้สัญญาอนุญาต MIT License
+### รันจาก Source Code
+```bash
+# โคลนและติดตั้ง Dependencies
+git clone https://github.com/phwyverysad/discord-quest-completer.git
+cd discord-quest-completer
+pnpm install
 
-```text
-MIT License - Copyright (c) 2026 phwyverysad
+# เริ่มต้นใช้งานโปรแกรม (Development)
+pnpm tauri dev
 ```
+
+### คำสั่งคอมไพล์ (Build Commands)
+```bash
+# บิลด์ตัวรันจำลองเกม (Win Runner)
+pnpm build:runner:win
+pnpm copy:runner:win
+
+# คอมไพล์โปรแกรมเป็นไฟล์ติดตั้งและไฟล์ .exe (Release Mode)
+pnpm tauri build
+```
+
+---
+
+โปรเจกต์นี้เผยแพร่ภายใต้สัญญาอนุญาต [MIT License](LICENSE) - Copyright (c) 2026 phwyverysad
