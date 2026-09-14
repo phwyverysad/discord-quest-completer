@@ -7,6 +7,8 @@ import { useSound } from '@/composables/sound';
 import IconRustLang from '@/components/IconRustLang.vue';
 import IconVueJs from '@/components/IconVueJs.vue';
 import CustomDropdown, { type DropdownOption } from '@/components/CustomDropdown.vue';
+import discordStableIcon from '@/assets/discord-stable.png';
+import discordCanaryIcon from '@/assets/discord-canary.png';
 
 type SettingsTab = 'general' | 'language' | 'theme' | 'sound' | 'discordRpc';
 
@@ -688,12 +690,19 @@ onMounted(() => {
         <div class="space-y-3.5">
           <!-- Stable Target Toggle -->
           <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-            <div>
-              <div class="text-sm font-bold text-slate-900 dark:text-white">
-                {{ t.discordStableLabel }}
-              </div>
-              <div class="text-xs text-slate-400 mt-0.5">
-                {{ t.officialRelease }}
+            <div class="flex items-center gap-3.5 min-w-0">
+              <img
+                :src="discordStableIcon"
+                alt="Discord Stable"
+                class="w-8 h-8 rounded-full object-contain shrink-0"
+              />
+              <div>
+                <div class="text-sm font-bold text-slate-900 dark:text-white">
+                  {{ t.discordStableLabel }}
+                </div>
+                <div class="text-xs text-slate-400 mt-0.5">
+                  {{ t.officialRelease }}
+                </div>
               </div>
             </div>
             <button
@@ -711,12 +720,19 @@ onMounted(() => {
 
           <!-- PTB Target Toggle -->
           <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-            <div>
-              <div class="text-sm font-bold text-slate-900 dark:text-white">
-                {{ t.discordPtbLabel }}
-              </div>
-              <div class="text-xs text-slate-400 mt-0.5">
-                {{ t.discordPtbSubDesc }}
+            <div class="flex items-center gap-3.5 min-w-0">
+              <img
+                :src="discordStableIcon"
+                alt="Discord PTB"
+                class="w-8 h-8 rounded-full object-contain shrink-0"
+              />
+              <div>
+                <div class="text-sm font-bold text-slate-900 dark:text-white">
+                  {{ t.discordPtbLabel }}
+                </div>
+                <div class="text-xs text-slate-400 mt-0.5">
+                  {{ t.discordPtbSubDesc }}
+                </div>
               </div>
             </div>
             <button
@@ -734,12 +750,19 @@ onMounted(() => {
 
           <!-- Canary Target Toggle -->
           <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-            <div>
-              <div class="text-sm font-bold text-slate-900 dark:text-white">
-                {{ t.discordCanaryLabel }}
-              </div>
-              <div class="text-xs text-slate-400 mt-0.5">
-                {{ t.discordCanarySubDesc }}
+            <div class="flex items-center gap-3.5 min-w-0">
+              <img
+                :src="discordCanaryIcon"
+                alt="Discord Canary"
+                class="w-8 h-8 rounded-full object-contain shrink-0"
+              />
+              <div>
+                <div class="text-sm font-bold text-slate-900 dark:text-white">
+                  {{ t.discordCanaryLabel }}
+                </div>
+                <div class="text-xs text-slate-400 mt-0.5">
+                  {{ t.discordCanarySubDesc }}
+                </div>
               </div>
             </div>
             <button

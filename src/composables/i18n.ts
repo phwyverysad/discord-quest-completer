@@ -215,6 +215,9 @@ export interface Translations {
   officialRelease: string;
   discordPtbSubDesc: string;
   discordCanarySubDesc: string;
+  badgeOfficial: string;
+  badgePtb: string;
+  badgeCanary: string;
   customSoundItem: string;
   previewTitle: string;
   deleteTitle: string;
@@ -405,6 +408,9 @@ const enTranslations: Translations = {
   officialRelease: 'Official Discord release',
   discordPtbSubDesc: 'Discord Public Test Build',
   discordCanarySubDesc: 'Discord Canary nightly build',
+  badgeOfficial: 'Official',
+  badgePtb: 'Public Test Build',
+  badgeCanary: 'Nightly Build',
   customSoundItem: 'Custom sound',
   previewTitle: 'Preview',
   deleteTitle: 'Delete'
@@ -595,6 +601,9 @@ const thTranslations: Translations = {
   officialRelease: 'เวอร์ชันทางการของ Discord',
   discordPtbSubDesc: 'Discord เวอร์ชัน Public Test Build',
   discordCanarySubDesc: 'Discord Canary เวอร์ชันทดสอบรอบดึก',
+  badgeOfficial: 'เวอร์ชันทางการ',
+  badgePtb: 'เวอร์ชันทดสอบสาธารณะ',
+  badgeCanary: 'เวอร์ชันทดสอบรอบดึก',
   customSoundItem: 'เสียงกำหนดเอง',
   previewTitle: 'ฟังตัวอย่าง',
   deleteTitle: 'ลบ'
