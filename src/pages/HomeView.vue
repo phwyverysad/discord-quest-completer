@@ -1467,49 +1467,20 @@ provide<GameActionsProvider>(GameActionsKey, {
               <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
             </div>
 
-            <!-- Reorder Gripper & Up/Down Arrows -->
-            <div class="flex flex-col items-center justify-center shrink-0 -ml-1 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500">
-              <!-- Move Up -->
-              <button
-                type="button"
-                @click.stop="moveGameUp(index)"
-                :disabled="index === 0"
-                :title="t.reorderUp"
-                class="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
-
-              <!-- Drag Grip Icon (Touch & Mouse Pointer Grab Handle) -->
-              <div
-                @pointerdown.stop="onGripPointerDown(index, $event)"
-                :title="t.dragToReorder"
-                class="p-0.5 rounded cursor-grab active:cursor-grabbing hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors my-0.5"
-              >
-                <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <circle cx="9" cy="6" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="6" r="1.2" fill="currentColor" />
-                  <circle cx="9" cy="12" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="12" r="1.2" fill="currentColor" />
-                  <circle cx="9" cy="18" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="18" r="1.2" fill="currentColor" />
-                </svg>
-              </div>
-
-              <!-- Move Down -->
-              <button
-                type="button"
-                @click.stop="moveGameDown(index)"
-                :disabled="index === gameList.length - 1"
-                :title="t.reorderDown"
-                class="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+            <!-- Dedicated Drag Grip Handle (Left side) -->
+            <div
+              @pointerdown.stop="onGripPointerDown(index, $event)"
+              :title="t.dragToReorder"
+              class="w-7 h-9 flex items-center justify-center rounded-xl text-slate-300 dark:text-slate-600 hover:text-[#5865F2] hover:bg-[#5865F2]/10 dark:hover:bg-[#5865F2]/20 cursor-grab active:cursor-grabbing transition-colors shrink-0 -ml-1 select-none"
+            >
+              <svg class="w-4 h-4 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="8.5" cy="6" r="1.5" />
+                <circle cx="15.5" cy="6" r="1.5" />
+                <circle cx="8.5" cy="12" r="1.5" />
+                <circle cx="15.5" cy="12" r="1.5" />
+                <circle cx="8.5" cy="18" r="1.5" />
+                <circle cx="15.5" cy="18" r="1.5" />
+              </svg>
             </div>
 
             <!-- Game Icon from Discord CDN -->
@@ -1543,18 +1514,47 @@ provide<GameActionsProvider>(GameActionsKey, {
               </div>
             </div>
 
-            <!-- Clean Solid Remove Button -->
-            <button
-              type="button"
-              @click.stop="removeGameFromList(game)"
-              :title="t.remove"
-              class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-500 hover:text-white border border-rose-200 dark:border-rose-900/60 transition-colors cursor-pointer group/remove select-none"
-            >
-              <svg class="w-3.5 h-3.5 transition-transform duration-150 group-hover/remove:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span>{{ t.remove }}</span>
-            </button>
+            <!-- Right Actions: Move Up / Down Buttons + Remove Button -->
+            <div class="shrink-0 flex items-center gap-1.5 select-none">
+              <!-- Move Up Button -->
+              <button
+                type="button"
+                @click.stop="moveGameUp(index)"
+                :disabled="index === 0"
+                :title="t.reorderUp"
+                class="w-7 h-7 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+
+              <!-- Move Down Button -->
+              <button
+                type="button"
+                @click.stop="moveGameDown(index)"
+                :disabled="index === gameList.length - 1"
+                :title="t.reorderDown"
+                class="w-7 h-7 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Clean Solid Remove Button -->
+              <button
+                type="button"
+                @click.stop="removeGameFromList(game)"
+                :title="t.remove"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-500 hover:text-white border border-rose-200 dark:border-rose-900/60 transition-colors cursor-pointer group/remove select-none"
+              >
+                <svg class="w-3.5 h-3.5 transition-transform duration-150 group-hover/remove:scale-110 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>{{ t.remove }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
