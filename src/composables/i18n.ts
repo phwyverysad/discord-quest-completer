@@ -221,6 +221,9 @@ export interface Translations {
   customSoundItem: string;
   previewTitle: string;
   deleteTitle: string;
+  dontShowAgain: string;
+  rpcWarningSettingLabel: string;
+  rpcWarningSettingDesc: string;
 }
 
 const enTranslations: Translations = {
@@ -413,7 +416,10 @@ const enTranslations: Translations = {
   badgeCanary: 'Nightly Build',
   customSoundItem: 'Custom sound',
   previewTitle: 'Preview',
-  deleteTitle: 'Delete'
+  deleteTitle: 'Delete',
+  dontShowAgain: "Don't show this again",
+  rpcWarningSettingLabel: 'RPC Risk Warning Dialog',
+  rpcWarningSettingDesc: 'Display the experimental risk warning dialog before launching RPC games'
 };
 
 const thTranslations: Translations = {
@@ -606,7 +612,10 @@ const thTranslations: Translations = {
   badgeCanary: 'เวอร์ชันทดสอบรอบดึก',
   customSoundItem: 'เสียงกำหนดเอง',
   previewTitle: 'ฟังตัวอย่าง',
-  deleteTitle: 'ลบ'
+  deleteTitle: 'ลบ',
+  dontShowAgain: 'ไม่ต้องแสดงอีกในครั้งถัดไป',
+  rpcWarningSettingLabel: 'กล่องแจ้งเตือนความเสี่ยง RPC',
+  rpcWarningSettingDesc: 'แสดงกล่องเตือนความเสี่ยงทุกครั้งก่อนเริ่มใช้งานเกม Discord RPC'
 };
 
 const jaTranslations: Translations = {

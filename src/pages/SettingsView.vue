@@ -20,6 +20,8 @@ const {
   setTheme,
   autoRefresh,
   setAutoRefresh,
+  skipRpcWarning,
+  setSkipRpcWarning,
   gamesStats,
   refreshGamesStats,
   openGamesFolder,
@@ -523,7 +525,8 @@ onMounted(() => {
       </div>
 
       <!-- Preferences Card -->
-      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all space-y-5">
+        <!-- Auto Refresh -->
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
@@ -543,6 +546,30 @@ onMounted(() => {
             <span
               class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out"
               :class="autoRefresh ? 'translate-x-5' : 'translate-x-0'"
+            />
+          </button>
+        </div>
+
+        <!-- RPC Risk Warning Toggle -->
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-5 flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+              {{ t.rpcWarningSettingLabel }}
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {{ t.rpcWarningSettingDesc }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            @click="setSkipRpcWarning(!skipRpcWarning)"
+            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none select-none"
+            :class="!skipRpcWarning ? 'bg-[#5865F2]' : 'bg-slate-300 dark:bg-slate-700'"
+          >
+            <span
+              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out"
+              :class="!skipRpcWarning ? 'translate-x-5' : 'translate-x-0'"
             />
           </button>
         </div>

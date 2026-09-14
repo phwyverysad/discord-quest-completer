@@ -104,12 +104,13 @@ const fallbackColor = computed(() => {
       v-if="iconUrl && !hasError"
       :src="iconUrl"
       :alt="game?.name || 'Game'"
+      draggable="false"
       loading="eager"
       decoding="async"
       referrerpolicy="no-referrer"
       @load="onImageLoad"
       @error="onImageError"
-      class="relative w-full h-full object-cover transition-opacity duration-150"
+      class="relative w-full h-full object-cover transition-opacity duration-150 pointer-events-none select-none"
       :class="isLoaded ? 'opacity-100' : 'opacity-0'"
     />
   </div>

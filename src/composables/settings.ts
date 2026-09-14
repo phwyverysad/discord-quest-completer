@@ -13,6 +13,7 @@ const savedTheme = (localStorage.getItem('dqc_theme') as ThemeMode) || 'light';
 const themeMode = ref<ThemeMode>(savedTheme);
 
 const autoRefresh = ref<boolean>(localStorage.getItem('dqc_auto_refresh') !== 'false');
+const skipRpcWarning = ref<boolean>(localStorage.getItem('dqc_skip_rpc_warning') === 'true');
 
 const gamesStats = ref<GamesStats>({
   count: 0,
@@ -50,6 +51,11 @@ export function useAppSettings() {
   function setAutoRefresh(val: boolean) {
     autoRefresh.value = val;
     localStorage.setItem('dqc_auto_refresh', String(val));
+  }
+
+  function setSkipRpcWarning(val: boolean) {
+    skipRpcWarning.value = val;
+    localStorage.setItem('dqc_skip_rpc_warning', String(val));
   }
 
   async function refreshGamesStats() {
@@ -96,6 +102,8 @@ export function useAppSettings() {
     setTheme,
     autoRefresh,
     setAutoRefresh,
+    skipRpcWarning,
+    setSkipRpcWarning,
     gamesStats,
     refreshGamesStats,
     openGamesFolder,

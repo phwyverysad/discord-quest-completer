@@ -19,6 +19,8 @@ import { useI18n } from '@/composables/i18n';
 import GameIcon from '@/components/GameIcon.vue';
 import { useAutoPilot } from '@/composables/auto-pilot';
 import { appIconCache } from '@/services/icon-service';
+import { useAppSettings } from '@/composables/settings';
+import { useSound } from '@/composables/sound';
 
 type DialogKey = 'none' | 'rpc_message_1' | 'no_game_selected';
 
@@ -42,6 +44,9 @@ const isDialogOpen = ref(false);
 const dialogKey = ref<DialogKey>('none');
 const isConnectedToRPC = ref(false);
 const isConnecting = ref(false);
+const { skipRpcWarning, setSkipRpcWarning } = useAppSettings();
+const { playClickSound } = useSound();
+const dontShowRpcWarningAgain = ref(false);
 
 // Search functionality
 const searchQuery = shallowRef('');
@@ -434,35 +439,171 @@ function removeGameFromList(game: Game) {
   }
 }
 
-// Drag and drop & manual reordering
+// Drag and drop & manual reordering (Dual Pointer & HTML5 system with visual drop line)
 const draggedIndex = ref<number | null>(null);
+const dragOverIndex = ref<number | null>(null);
+const dropPosition = ref<'before' | 'after' | null>(null);
+const isPointerDragging = ref(false);
 
+function reorderGame(fromIndex: number, targetIndex: number, position: 'before' | 'after') {
+  if (fromIndex === targetIndex && position === (fromIndex === 0 ? 'before' : 'after')) return;
+
+  let toIndex = targetIndex;
+  if (position === 'after') {
+    toIndex = targetIndex + 1;
+  }
+  if (fromIndex < toIndex) {
+    toIndex -= 1;
+  }
+
+  if (fromIndex === toIndex) return;
+  if (fromIndex < 0 || fromIndex >= gameList.value.length) return;
+  if (toIndex < 0 || toIndex >= gameList.value.length) return;
+
+  const [moved] = gameList.value.splice(fromIndex, 1);
+  if (moved) {
+    gameList.value.splice(toIndex, 0, moved);
+    saveGameList();
+    try {
+      playClickSound();
+    } catch {}
+  }
+}
+
+// Pointer Events Dragging on Grip Handle
+let gripPointerId: number | null = null;
+let gripElement: HTMLElement | null = null;
+
+function onGripPointerDown(index: number, event: PointerEvent) {
+  if (event.button !== 0) return;
+  gripPointerId = event.pointerId;
+  gripElement = event.currentTarget as HTMLElement;
+  try {
+    gripElement.setPointerCapture(event.pointerId);
+  } catch {}
+
+  draggedIndex.value = index;
+  dragOverIndex.value = index;
+  dropPosition.value = null;
+  isPointerDragging.value = true;
+
+  window.addEventListener('pointermove', onWindowPointerMove);
+  window.addEventListener('pointerup', onWindowPointerUp);
+  window.addEventListener('pointercancel', onWindowPointerCancel);
+}
+
+function onWindowPointerMove(event: PointerEvent) {
+  if (!isPointerDragging.value || draggedIndex.value === null) return;
+
+  const cards = document.querySelectorAll<HTMLElement>('[data-game-index]');
+  if (!cards.length) return;
+
+  const clientY = event.clientY;
+  let found = false;
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const rect = card.getBoundingClientRect();
+    const idx = parseInt(card.getAttribute('data-game-index') || '-1', 10);
+    if (idx === -1) continue;
+
+    if (clientY >= rect.top && clientY <= rect.bottom) {
+      dragOverIndex.value = idx;
+      dropPosition.value = clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    const firstRect = cards[0].getBoundingClientRect();
+    const lastRect = cards[cards.length - 1].getBoundingClientRect();
+    if (clientY < firstRect.top) {
+      dragOverIndex.value = 0;
+      dropPosition.value = 'before';
+    } else if (clientY > lastRect.bottom) {
+      dragOverIndex.value = gameList.value.length - 1;
+      dropPosition.value = 'after';
+    }
+  }
+}
+
+function onWindowPointerUp(event: PointerEvent) {
+  if (isPointerDragging.value && draggedIndex.value !== null && dragOverIndex.value !== null && dropPosition.value !== null) {
+    reorderGame(draggedIndex.value, dragOverIndex.value, dropPosition.value);
+  }
+  cleanupPointerDrag();
+}
+
+function onWindowPointerCancel() {
+  cleanupPointerDrag();
+}
+
+function cleanupPointerDrag() {
+  isPointerDragging.value = false;
+  draggedIndex.value = null;
+  dragOverIndex.value = null;
+  dropPosition.value = null;
+  if (gripElement && gripPointerId !== null) {
+    try {
+      gripElement.releasePointerCapture(gripPointerId);
+    } catch {}
+  }
+  gripElement = null;
+  gripPointerId = null;
+  window.removeEventListener('pointermove', onWindowPointerMove);
+  window.removeEventListener('pointerup', onWindowPointerUp);
+  window.removeEventListener('pointercancel', onWindowPointerCancel);
+}
+
+onUnmounted(() => {
+  cleanupPointerDrag();
+});
+
+// HTML5 Drag & Drop (WebView2 patched)
 function handleDragStart(index: number, event: DragEvent) {
+  if (isPointerDragging.value) {
+    event.preventDefault();
+    return;
+  }
   draggedIndex.value = index;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.dropEffect = 'move';
     event.dataTransfer.setData('text/plain', String(index));
   }
 }
 
-function handleDragOver(event: DragEvent) {
+function handleDragOver(index: number, event: DragEvent) {
   event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+  if (draggedIndex.value === null || draggedIndex.value === index) {
+    dragOverIndex.value = null;
+    dropPosition.value = null;
+    return;
+  }
+  dragOverIndex.value = index;
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const relY = event.clientY - rect.top;
+  dropPosition.value = relY < rect.height / 2 ? 'before' : 'after';
 }
 
 function handleDrop(targetIndex: number, event: DragEvent) {
   event.preventDefault();
-  if (draggedIndex.value !== null && draggedIndex.value !== targetIndex) {
-    const moved = gameList.value.splice(draggedIndex.value, 1)[0];
-    if (moved) {
-      gameList.value.splice(targetIndex, 0, moved);
-      saveGameList();
-    }
+  if (draggedIndex.value !== null && dropPosition.value !== null) {
+    reorderGame(draggedIndex.value, targetIndex, dropPosition.value);
   }
   draggedIndex.value = null;
+  dragOverIndex.value = null;
+  dropPosition.value = null;
 }
 
 function handleDragEnd() {
   draggedIndex.value = null;
+  dragOverIndex.value = null;
+  dropPosition.value = null;
 }
 
 function moveGameUp(index: number) {
@@ -471,6 +612,9 @@ function moveGameUp(index: number) {
     if (item) {
       gameList.value.splice(index - 1, 0, item);
       saveGameList();
+      try {
+        playClickSound();
+      } catch {}
     }
   }
 }
@@ -481,6 +625,9 @@ function moveGameDown(index: number) {
     if (item) {
       gameList.value.splice(index + 1, 0, item);
       saveGameList();
+      try {
+        playClickSound();
+      } catch {}
     }
   }
 }
@@ -813,6 +960,9 @@ function handlePlayClick(payload: { game: Game; executable: GameExecutable }, is
 }
 
 async function onAcceptRisk() {
+  if (dontShowRpcWarningAgain.value) {
+    setSkipRpcWarning(true);
+  }
   if (pendingPlayPayload.value) {
     const { game, executable, isInstall } = pendingPlayPayload.value;
     pendingPlayPayload.value = null;
@@ -831,9 +981,14 @@ async function onAcceptRisk() {
 }
 
 function showDialog(message: DialogKey) {
+  if (message === 'rpc_message_1' && skipRpcWarning.value) {
+    onAcceptRisk();
+    return;
+  }
   isDialogOpen.value = true;
   dialogMessage.value = message;
   dialogKey.value = message;
+  dontShowRpcWarningAgain.value = false;
   if (!isEmpty(message)) {
     dialogRef.value?.showModal();
   }
@@ -883,6 +1038,18 @@ provide<GameActionsProvider>(GameActionsKey, {
             <p class="font-medium text-amber-600 dark:text-amber-400 select-none">
               {{ t.dialogRpcWarningDesc3 }}
             </p>
+
+            <!-- Don't Show Again Checkbox -->
+            <label class="flex items-center gap-2.5 cursor-pointer mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 select-none">
+              <input
+                type="checkbox"
+                v-model="dontShowRpcWarningAgain"
+                class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-amber-500 focus:ring-amber-400 dark:bg-slate-700 cursor-pointer accent-amber-500"
+              />
+              <span class="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300">
+                {{ t.dontShowAgain }}
+              </span>
+            </label>
           </div>
 
           <div v-if="dialogKey === 'no_game_selected'" class="select-none">
@@ -1269,20 +1436,37 @@ provide<GameActionsProvider>(GameActionsKey, {
           <div
             v-for="(game, index) in gameList"
             :key="game.uid"
+            :data-game-index="index"
             draggable="true"
             @dragstart="handleDragStart(index, $event)"
-            @dragover="handleDragOver($event)"
+            @dragover="handleDragOver(index, $event)"
             @drop="handleDrop(index, $event)"
             @dragend="handleDragEnd"
-            @click="selectGame(game)"
-            class="p-3.5 rounded-2xl border transition-colors cursor-pointer flex items-center gap-3 group relative select-none"
+            @click="!isPointerDragging && selectGame(game)"
+            class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 group relative select-none"
             :class="[
               selectedGame?.uid === game.uid
                 ? 'border-2 border-[#5865F2] bg-[#5865F2]/5 dark:bg-[#5865F2]/15 shadow-xs'
                 : 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#141A26] hover:bg-slate-50 dark:hover:bg-slate-800/60',
-              draggedIndex === index ? 'opacity-40 border-dashed border-[#5865F2]' : ''
+              draggedIndex === index ? 'opacity-35 border-dashed border-[#5865F2] bg-[#5865F2]/5 scale-[0.99]' : ''
             ]"
           >
+            <!-- Drop Insertion Guideline: Before (Top) -->
+            <div
+              v-if="dragOverIndex === index && draggedIndex !== index && dropPosition === 'before'"
+              class="absolute -top-1.5 left-2 right-2 h-1 bg-[#5865F2] rounded-full shadow-[0_0_8px_rgba(88,101,242,0.9)] z-30 pointer-events-none flex items-center"
+            >
+              <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
+            </div>
+
+            <!-- Drop Insertion Guideline: After (Bottom) -->
+            <div
+              v-if="dragOverIndex === index && draggedIndex !== index && dropPosition === 'after'"
+              class="absolute -bottom-1.5 left-2 right-2 h-1 bg-[#5865F2] rounded-full shadow-[0_0_8px_rgba(88,101,242,0.9)] z-30 pointer-events-none flex items-center"
+            >
+              <span class="w-2.5 h-2.5 rounded-full bg-[#5865F2] -ml-1 ring-2 ring-white dark:ring-[#141A26]"></span>
+            </div>
+
             <!-- Reorder Gripper & Up/Down Arrows -->
             <div class="flex flex-col items-center justify-center shrink-0 -ml-1 text-slate-300 dark:text-slate-600 group-hover:text-slate-400 dark:group-hover:text-slate-500">
               <!-- Move Up -->
@@ -1298,15 +1482,21 @@ provide<GameActionsProvider>(GameActionsKey, {
                 </svg>
               </button>
 
-              <!-- Drag Grip Icon -->
-              <svg class="w-3.5 h-3.5 cursor-grab active:cursor-grabbing my-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <circle cx="9" cy="6" r="1.2" fill="currentColor" />
-                <circle cx="15" cy="6" r="1.2" fill="currentColor" />
-                <circle cx="9" cy="12" r="1.2" fill="currentColor" />
-                <circle cx="15" cy="12" r="1.2" fill="currentColor" />
-                <circle cx="9" cy="18" r="1.2" fill="currentColor" />
-                <circle cx="15" cy="18" r="1.2" fill="currentColor" />
-              </svg>
+              <!-- Drag Grip Icon (Touch & Mouse Pointer Grab Handle) -->
+              <div
+                @pointerdown.stop="onGripPointerDown(index, $event)"
+                :title="t.dragToReorder"
+                class="p-0.5 rounded cursor-grab active:cursor-grabbing hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors my-0.5"
+              >
+                <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="9" cy="6" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="6" r="1.2" fill="currentColor" />
+                  <circle cx="9" cy="12" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="12" r="1.2" fill="currentColor" />
+                  <circle cx="9" cy="18" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="18" r="1.2" fill="currentColor" />
+                </svg>
+              </div>
 
               <!-- Move Down -->
               <button
