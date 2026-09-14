@@ -81,7 +81,7 @@ function discordTest() {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-6 animate-fadeIn">
+  <div class="max-w-6xl mx-auto space-y-6 animate-fadeIn">
     <!-- Page Title Header -->
     <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800">
       <div>

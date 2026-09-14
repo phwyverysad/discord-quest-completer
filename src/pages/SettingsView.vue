@@ -91,32 +91,47 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-6 animate-fadeIn pb-8 select-none">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
-      <div>
-        <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {{ t.settingsTitle }}
-        </h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          {{ t.settingsSubtitle }}
-        </p>
-      </div>
-      <div class="text-[11px] text-slate-400 font-medium">
-        {{ t.settingsSubtitle }}
+  <div class="max-w-6xl mx-auto w-full space-y-6 animate-fadeIn pb-12 select-none">
+    <!-- Top Hero Banner Card: Matching HomeView Style -->
+    <div class="rounded-3xl bg-white dark:bg-[#141A26] border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div class="flex items-center gap-5">
+          <!-- Settings Icon Box: Solid Clean Discord Blurple -->
+          <div class="w-14 h-14 rounded-2xl bg-[#5865F2] text-white flex items-center justify-center p-3.5 shrink-0 shadow-xs">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h1 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                {{ t.settingsTitle }}
+              </h1>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] border border-[#5865F2]/20 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#5865F2]"></span>
+                Preferences & Audio
+              </span>
+            </div>
+            <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 font-normal">
+              {{ t.settingsSubtitle }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Navigation Tabs (Sleek pill tabs matching MultiRoblox style) -->
-    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
       <button
         type="button"
         @click="activeTab = 'general'"
-        class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
         :class="[
           activeTab === 'general'
             ? 'bg-[#5865F2] text-white shadow-xs'
-            : 'bg-white/80 dark:bg-[#131927] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800'
+            : 'bg-white dark:bg-[#141A26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
         ]"
       >
         {{ t.tabGeneral }}
@@ -125,11 +140,11 @@ onMounted(() => {
       <button
         type="button"
         @click="activeTab = 'language'"
-        class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
         :class="[
           activeTab === 'language'
             ? 'bg-[#5865F2] text-white shadow-xs'
-            : 'bg-white/80 dark:bg-[#131927] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800'
+            : 'bg-white dark:bg-[#141A26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
         ]"
       >
         {{ t.tabLanguage }}
@@ -138,11 +153,11 @@ onMounted(() => {
       <button
         type="button"
         @click="activeTab = 'theme'"
-        class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
         :class="[
           activeTab === 'theme'
             ? 'bg-[#5865F2] text-white shadow-xs'
-            : 'bg-white/80 dark:bg-[#131927] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800'
+            : 'bg-white dark:bg-[#141A26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
         ]"
       >
         {{ t.tabTheme }}
@@ -151,39 +166,42 @@ onMounted(() => {
       <button
         type="button"
         @click="activeTab = 'sound'"
-        class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none flex items-center gap-1.5"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none flex items-center gap-2"
         :class="[
           activeTab === 'sound'
             ? 'bg-[#5865F2] text-white shadow-xs'
-            : 'bg-white/80 dark:bg-[#131927] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800'
+            : 'bg-white dark:bg-[#141A26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
         ]"
       >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        </svg>
         <span>{{ t.tabSound }}</span>
       </button>
 
       <button
         type="button"
         @click="activeTab = 'discordRpc'"
-        class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
+        class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none"
         :class="[
           activeTab === 'discordRpc'
             ? 'bg-[#5865F2] text-white shadow-xs'
-            : 'bg-white/80 dark:bg-[#131927] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800'
+            : 'bg-white dark:bg-[#141A26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
         ]"
       >
         {{ t.tabDiscordRpc }}
       </button>
     </div>
 
-    <!-- TAB 1: SOUNDS (เสียง) - Matching MultiRoblox design -->
-    <div v-show="activeTab === 'sound'" class="space-y-4">
+    <!-- TAB 1: SOUNDS (เสียง) - Matching MultiRoblox design in full max-w-6xl -->
+    <div v-show="activeTab === 'sound'" class="space-y-5">
       <!-- Section 1: เสียงคลิก / โพรไฟล์เสียง -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="mb-4">
-          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="mb-5">
+          <div class="text-[11px] font-bold text-[#5865F2] dark:text-[#A5AFFA] uppercase tracking-wider mb-1">
             {{ t.soundSection }}
           </div>
-          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+          <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             {{ t.soundProfile }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -191,49 +209,49 @@ onMounted(() => {
           </p>
         </div>
 
-        <!-- Sound Profile Cards Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <!-- Sound Profile Cards Grid: Expanded to 6 Columns with Beautiful Padding -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <!-- Built-in Profiles -->
           <div
             v-for="(prof, id) in SOUND_PROFILES"
             :key="id"
             @click="setProfile(String(id))"
-            class="relative rounded-2xl p-3.5 border transition-all cursor-pointer flex flex-col justify-between group min-h-[125px] select-none"
+            class="relative rounded-2xl p-4 border transition-all cursor-pointer flex flex-col justify-between group min-h-[140px] select-none"
             :class="[
               currentProfile === id
                 ? 'border-[#5865F2] ring-2 ring-[#5865F2]/25 bg-[#5865F2]/5 dark:bg-[#5865F2]/15 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-[#141A26] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-[#161D2B]'
+                : 'border-slate-200/90 dark:border-slate-800/90 bg-slate-50/60 dark:bg-[#101624] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-[#161D2B]'
             ]"
           >
             <!-- Card Top: Icon & Preview Button -->
             <div class="flex items-start justify-between">
               <!-- Icon Squircle -->
               <div
-                class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-2xs"
                 :class="[
                   currentProfile === id
-                    ? 'bg-[#5865F2] text-white shadow-2xs'
+                    ? 'bg-[#5865F2] text-white'
                     : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-slate-300/80 dark:group-hover:bg-slate-700'
                 ]"
               >
                 <!-- Keyboard Icon (Clicky) -->
-                <svg v-if="prof.icon === 'keyboard'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="prof.icon === 'keyboard'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <rect x="2" y="4" width="20" height="16" rx="2" stroke-width="2" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10" />
                 </svg>
 
                 <!-- Piano/Keyboard Key Icon (Thocky) -->
-                <svg v-else-if="prof.icon === 'piano'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="prof.icon === 'piano'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
 
                 <!-- Water drop Icon (Creamy) -->
-                <svg v-else-if="prof.icon === 'water_drop'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="prof.icon === 'water_drop'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v.01M12 21a7 7 0 007-7c0-3.5-7-11-7-11S5 10.5 5 14a7 7 0 007 7z" />
                 </svg>
 
                 <!-- Poppy/Bubble Icon (Poppy) -->
-                <svg v-else-if="prof.icon === 'bubble_chart'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="prof.icon === 'bubble_chart'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="4" stroke-width="2" />
                   <circle cx="6" cy="7" r="2.5" stroke-width="1.8" />
                   <circle cx="17.5" cy="7" r="2" stroke-width="1.8" />
@@ -241,12 +259,12 @@ onMounted(() => {
                 </svg>
 
                 <!-- Typewriter/Document Icon (Typewriter) -->
-                <svg v-else-if="prof.icon === 'article'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="prof.icon === 'article'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
 
                 <!-- Volume Off Icon (Off) -->
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                 </svg>
@@ -257,20 +275,20 @@ onMounted(() => {
                 type="button"
                 @click.stop="previewSound(String(id))"
                 title="Preview"
-                class="w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none opacity-80 group-hover:opacity-100"
+                class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none opacity-80 group-hover:opacity-100"
               >
-                <svg class="w-3 h-3 fill-current ml-0.5" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </button>
             </div>
 
             <!-- Card Bottom: Text -->
-            <div class="mt-2.5">
-              <div class="font-bold text-xs text-slate-900 dark:text-white leading-snug">
+            <div class="mt-3">
+              <div class="font-bold text-sm text-slate-900 dark:text-white leading-snug">
                 {{ prof.label }}
               </div>
-              <div class="text-[10.5px] text-slate-400 dark:text-slate-500 leading-tight mt-0.5 line-clamp-2">
+              <div class="text-[11px] text-slate-400 dark:text-slate-500 leading-tight mt-1 line-clamp-2">
                 {{ prof.desc }}
               </div>
             </div>
@@ -281,37 +299,37 @@ onMounted(() => {
             v-for="custom in customSounds"
             :key="custom.id"
             @click="setProfile('__custom__' + custom.id)"
-            class="relative rounded-2xl p-3.5 border transition-all cursor-pointer flex flex-col justify-between group min-h-[125px] select-none"
+            class="relative rounded-2xl p-4 border transition-all cursor-pointer flex flex-col justify-between group min-h-[140px] select-none"
             :class="[
               currentProfile === '__custom__' + custom.id
                 ? 'border-[#5865F2] ring-2 ring-[#5865F2]/25 bg-[#5865F2]/5 dark:bg-[#5865F2]/15 shadow-xs'
-                : 'border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-[#141A26] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-[#161D2B]'
+                : 'border-slate-200/90 dark:border-slate-800/90 bg-slate-50/60 dark:bg-[#101624] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-[#161D2B]'
             ]"
           >
             <div class="flex items-start justify-between">
               <!-- Audio Track Icon -->
               <div
-                class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors shadow-2xs"
                 :class="[
                   currentProfile === '__custom__' + custom.id
-                    ? 'bg-[#5865F2] text-white shadow-2xs'
+                    ? 'bg-[#5865F2] text-white'
                     : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                 ]"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
               </div>
 
               <!-- Actions: Preview & Delete -->
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1.5">
                 <button
                   type="button"
                   @click.stop="previewCustom(custom.id)"
                   title="Preview"
-                  class="w-6 h-6 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none"
+                  class="w-7 h-7 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-[#5865F2] hover:text-white text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors cursor-pointer select-none"
                 >
-                  <svg class="w-3 h-3 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </button>
@@ -319,20 +337,20 @@ onMounted(() => {
                   type="button"
                   @click.stop="deleteCustomSound(custom.id)"
                   title="Delete"
-                  class="w-6 h-6 rounded-full bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-500 hover:text-white text-rose-500 flex items-center justify-center transition-colors cursor-pointer select-none"
+                  class="w-7 h-7 rounded-full bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-500 hover:text-white text-rose-500 flex items-center justify-center transition-colors cursor-pointer select-none"
                 >
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <div class="mt-2.5">
-              <div class="font-bold text-xs text-slate-900 dark:text-white truncate" :title="custom.name">
+            <div class="mt-3">
+              <div class="font-bold text-sm text-slate-900 dark:text-white truncate" :title="custom.name">
                 {{ custom.name }}
               </div>
-              <div class="text-[10.5px] text-slate-400 dark:text-slate-500">
+              <div class="text-[11px] text-slate-400 dark:text-slate-500">
                 Custom sound
               </div>
             </div>
@@ -341,24 +359,28 @@ onMounted(() => {
       </div>
 
       <!-- Section 2: เสียงกำหนดเอง / อัปโหลดของคุณเอง -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              {{ t.soundCustom }}
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
             </div>
-            <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              {{ t.soundCustom }}
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {{ t.soundCustomDesc }}
-            </p>
+            <div>
+              <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+                {{ t.soundCustom }}
+              </h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {{ t.soundCustomDesc }}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             @click="triggerCustomAudioUpload"
-            class="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-[#5865F2] hover:bg-[#4752C4] active:bg-[#3C45A5] transition-colors flex items-center gap-2 shadow-xs cursor-pointer select-none self-start sm:self-auto"
+            class="shrink-0 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#5865F2] hover:bg-[#4752C4] active:bg-[#3C45A5] transition-colors flex items-center gap-2 shadow-xs cursor-pointer select-none self-start sm:self-auto"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -377,12 +399,12 @@ onMounted(() => {
       </div>
 
       <!-- Section 3: ระดับเสียง / ระดับเสียงคลิก -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="mb-4">
-          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+          <div class="text-[11px] font-bold text-[#5865F2] dark:text-[#A5AFFA] uppercase tracking-wider mb-1">
             {{ t.soundVolume }}
           </div>
-          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+          <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             {{ t.soundVolumeLabel }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -390,8 +412,8 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
-          <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-5 bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+          <svg class="w-6 h-6 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
 
@@ -402,10 +424,10 @@ onMounted(() => {
             step="1"
             :value="Math.round(volume * 100)"
             @input="handleVolumeChange"
-            class="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#5865F2]"
+            class="flex-1 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#5865F2]"
           />
 
-          <span class="w-12 text-right font-mono font-bold text-sm text-[#5865F2] dark:text-[#A5AFFA]">
+          <span class="min-w-[48px] text-right font-mono font-bold text-sm text-[#5865F2] dark:text-[#A5AFFA]">
             {{ Math.round(volume * 100) }}%
           </span>
         </div>
@@ -413,11 +435,11 @@ onMounted(() => {
     </div>
 
     <!-- TAB 2: GENERAL (ทั่วไป) -->
-    <div v-show="activeTab === 'general'" class="space-y-4">
+    <div v-show="activeTab === 'general'" class="space-y-5">
       <!-- Storage & Cache Management Card -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="mb-4">
-          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="mb-5">
+          <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             {{ t.storageSection }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -425,29 +447,29 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 mb-4 space-y-2">
+        <div class="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 mb-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-300 gap-2">
             <span class="font-normal">{{ t.dummyGamesFolder }}</span>
-            <span class="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-md bg-white dark:bg-[#131927] px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs">
+            <span class="font-mono text-xs text-slate-700 dark:text-slate-300 truncate max-w-xl bg-white dark:bg-[#131927] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
               {{ gamesStats.path || './games' }}
             </span>
           </div>
 
-          <div class="flex items-center gap-6 text-xs text-slate-600 dark:text-slate-300 pt-1">
+          <div class="flex items-center gap-8 text-xs text-slate-600 dark:text-slate-300 pt-1">
             <div>
-              {{ t.filesCount }} <strong class="text-[#5865F2] dark:text-[#818CF8] font-bold">{{ gamesStats.count }}</strong>
+              {{ t.filesCount }} <strong class="text-[#5865F2] dark:text-[#818CF8] font-bold text-sm">{{ gamesStats.count }}</strong>
             </div>
             <div>
-              {{ t.totalSize }} <strong class="text-[#5865F2] dark:text-[#818CF8] font-bold">{{ formatBytes(gamesStats.total_size_bytes) }}</strong>
+              {{ t.totalSize }} <strong class="text-[#5865F2] dark:text-[#818CF8] font-bold text-sm">{{ formatBytes(gamesStats.total_size_bytes) }}</strong>
             </div>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-3">
           <button
             type="button"
             @click="openGamesFolder"
-            class="px-4 py-2 text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-2 border border-slate-200 dark:border-slate-700 select-none"
+            class="px-5 py-2.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-2 border border-slate-200 dark:border-slate-700 select-none"
           >
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
@@ -459,7 +481,7 @@ onMounted(() => {
             type="button"
             @click="handleClearFolder"
             :disabled="isClearing || gamesStats.count === 0"
-            class="px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer select-none"
+            class="px-5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer select-none"
             :class="[
               gamesStats.count === 0
                 ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-200 dark:border-slate-700'
@@ -483,10 +505,10 @@ onMounted(() => {
       </div>
 
       <!-- Preferences Card -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+            <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
               {{ t.autoRefreshTitle }}
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -509,29 +531,29 @@ onMounted(() => {
       </div>
 
       <!-- About Section Card -->
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             {{ t.aboutSection }}
           </h2>
-          <span class="text-[11px] px-2.5 py-0.5 bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] rounded-full font-mono font-bold border border-[#5865F2]/25">
+          <span class="text-xs px-3 py-1 bg-[#5865F2]/10 dark:bg-[#5865F2]/20 text-[#5865F2] dark:text-[#A5AFFA] rounded-full font-mono font-bold border border-[#5865F2]/25">
             v1.0.0
           </span>
         </div>
 
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
           {{ t.aboutDesc }}
         </p>
 
-        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
-          <div class="flex items-center gap-2">
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-3">
+          <div class="flex items-center gap-2.5">
             <span>Built with</span>
             <span class="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <IconRustLang class="w-3.5 h-3.5 text-orange-500" /> Rust
+              <IconRustLang class="w-4 h-4 text-orange-500" /> Rust
             </span>
             <span>&middot;</span>
             <span class="inline-flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
-              <IconVueJs class="w-3.5 h-3.5 text-emerald-500" /> Vue.js
+              <IconVueJs class="w-4 h-4 text-emerald-500" /> Vue.js
             </span>
             <span>&middot;</span>
             <span class="font-medium text-slate-700 dark:text-slate-300">Tauri 2</span>
@@ -544,7 +566,7 @@ onMounted(() => {
               class="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 font-medium"
             >
               {{ t.githubRepo }}
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </a>
@@ -554,11 +576,11 @@ onMounted(() => {
     </div>
 
     <!-- TAB 3: LANGUAGE (ภาษา) -->
-    <div v-show="activeTab === 'language'" class="space-y-4">
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div v-show="activeTab === 'language'" class="space-y-5">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
-            <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+            <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
               {{ t.languageSection }}
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -566,7 +588,7 @@ onMounted(() => {
             </p>
           </div>
 
-          <div class="w-full sm:w-64">
+          <div class="w-full sm:w-72">
             <CustomDropdown
               :model-value="currentLocale"
               :options="languageOptions"
@@ -578,11 +600,11 @@ onMounted(() => {
     </div>
 
     <!-- TAB 4: THEME (ธีม) -->
-    <div v-show="activeTab === 'theme'" class="space-y-4">
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div v-show="activeTab === 'theme'" class="space-y-5">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div>
-            <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+            <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
               {{ t.themeSection }}
             </h2>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -591,11 +613,11 @@ onMounted(() => {
           </div>
 
           <!-- Sleek Segmented Pill Control -->
-          <div class="inline-flex p-1 bg-slate-100 dark:bg-[#0B0F19] rounded-xl border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
+          <div class="inline-flex p-1.5 bg-slate-100 dark:bg-[#0B0F19] rounded-xl border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
             <button
               type="button"
               @click="setTheme('light')"
-              class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[72px] select-none"
+              class="px-5 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[80px] select-none"
               :class="[
                 themeMode === 'light'
                   ? 'bg-[#5865F2] text-white shadow-2xs'
@@ -608,7 +630,7 @@ onMounted(() => {
             <button
               type="button"
               @click="setTheme('dark')"
-              class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[72px] select-none"
+              class="px-5 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[80px] select-none"
               :class="[
                 themeMode === 'dark'
                   ? 'bg-[#5865F2] text-white shadow-2xs'
@@ -621,7 +643,7 @@ onMounted(() => {
             <button
               type="button"
               @click="setTheme('system')"
-              class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[72px] select-none"
+              class="px-5 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center min-w-[80px] select-none"
               :class="[
                 themeMode === 'system'
                   ? 'bg-[#5865F2] text-white shadow-2xs'
@@ -636,10 +658,10 @@ onMounted(() => {
     </div>
 
     <!-- TAB 5: DISCORD RPC -->
-    <div v-show="activeTab === 'discordRpc'" class="space-y-4">
-      <div class="bg-white dark:bg-[#131927] rounded-3xl p-5 sm:p-6 border border-slate-200/90 dark:border-slate-800 shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
-        <div class="mb-4">
-          <h2 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+    <div v-show="activeTab === 'discordRpc'" class="space-y-5">
+      <div class="bg-white dark:bg-[#141A26] rounded-3xl p-6 md:p-7 border border-slate-200 dark:border-slate-800 shadow-xs transition-all">
+        <div class="mb-5">
+          <h2 class="text-base font-bold tracking-tight text-slate-900 dark:text-white">
             {{ t.discordRpcTargets }}
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -647,14 +669,14 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="space-y-3">
+        <div class="space-y-3.5">
           <!-- Stable Target Toggle -->
-          <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+          <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
             <div>
-              <div class="text-xs font-bold text-slate-900 dark:text-white">
+              <div class="text-sm font-bold text-slate-900 dark:text-white">
                 {{ t.discordStableLabel }}
               </div>
-              <div class="text-[11px] text-slate-400">
+              <div class="text-xs text-slate-400 mt-0.5">
                 Official Discord release
               </div>
             </div>
@@ -672,12 +694,12 @@ onMounted(() => {
           </div>
 
           <!-- PTB Target Toggle -->
-          <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+          <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
             <div>
-              <div class="text-xs font-bold text-slate-900 dark:text-white">
+              <div class="text-sm font-bold text-slate-900 dark:text-white">
                 {{ t.discordPtbLabel }}
               </div>
-              <div class="text-[11px] text-slate-400">
+              <div class="text-xs text-slate-400 mt-0.5">
                 Discord Public Test Build
               </div>
             </div>
@@ -695,12 +717,12 @@ onMounted(() => {
           </div>
 
           <!-- Canary Target Toggle -->
-          <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+          <div class="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
             <div>
-              <div class="text-xs font-bold text-slate-900 dark:text-white">
+              <div class="text-sm font-bold text-slate-900 dark:text-white">
                 {{ t.discordCanaryLabel }}
               </div>
-              <div class="text-[11px] text-slate-400">
+              <div class="text-xs text-slate-400 mt-0.5">
                 Discord Canary nightly build
               </div>
             </div>
