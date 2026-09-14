@@ -1,6 +1,6 @@
 <div align="center">
 
-**โปรแกรมช่วยทำเควสต์เกม Discord อัตโนมัติ ปลอดภัย และไม่จำเป็นต้องติดตั้งตัวเกมจริง**
+**Automated Discord game quest completer, lightweight, safe, and requiring no actual game installation**
 
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/phwyverysad/discord-quest-completer)
 [![Built With](https://img.shields.io/badge/Built%20With-Tauri%202%20%7C%20Rust%20%7C%20Vue%203-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
@@ -13,63 +13,62 @@
 
 ---
 
-## ภาพรวม (Overview)
-Discord Quest Completer คือโปรแกรมสำหรับรันและทำเควสต์ Discord อัตโนมัติบน Windows พัฒนาด้วย Tauri 2 (Rust + Vue 3) จำลองสถานะเกม (Rich Presence / RPC) และรัน Process เกมจำลองขนาดจิ๋ว (Dummy Runner) ช่วยให้ทำภารกิจ Discord Quests ได้จนจบโดยไม่จำเป็นต้องดาวน์โหลดหรือติดตั้งตัวเกมจริง พร้อมระบบ Auto-Pilot สลับคิวเกมให้อัตโนมัติ
+## Overview
+Discord Quest Completer is a desktop application for Windows built with Tauri 2 (Rust + Vue 3). It simulates game presence (Rich Presence / RPC) and launches tiny dummy runner processes to complete Discord Quests without downloading or installing full game files. Save disk space, reduce resource usage, and automate multi-game questing with built-in Auto-Pilot.
 
 ---
-
 
 https://github.com/user-attachments/assets/855b96be-8e35-4083-8735-f9754e9376c7
 
 ---
 
-## ฟีเจอร์เด่น (Key Features)
-* **Discord Quest Simulation**: จำลองสถานะเกมและเชื่อมต่อ Discord RPC โดยตรง ทำเควสต์สำเร็จได้โดยไม่ต้องติดตั้งตัวเกมจริง
-* **Ultra-Lightweight Dummy Runner**: ตัวจำลอง Process ขนาดจิ๋ว (~6 KB) พัฒนาด้วย Win32 API กินทรัพยากรเครื่องต่ำมาก แทบไม่ใช้ RAM และ CPU
-* **Multi-Client RPC**: รองรับการส่งสถานะไปยัง Discord ทุกรุ่นพร้อมกัน (Discord Stable, Discord PTB, Discord Canary)
-* **Auto-Pilot Mode**: ระบบสลับคิวทำเควสต์อัตโนมัติ ตั้งเวลาเล่นแต่ละเกมได้ (5m, 10m, 15m, 20m) พร้อมแถบเวลานับถอยหลังแบบเรียลไทม์
-* **Steam Icon Resolution Engine**: ดึงไอคอนเกม Steam แบบคมชัดอัตโนมัติหลายระดับ หมดปัญหาไอคอนเกมไม่แสดง
-* **Custom Game Queue & Reordering**: จัดการเพิ่ม ลบ และเรียงลำดับคิวเกมได้อย่างอิสระผ่านปุ่มเลื่อนขึ้น-ลง
-* **Multi-Language (i18n)**: รองรับ 2 ภาษา (ไทย และ อังกฤษ) สลับเปลี่ยนภาษาได้ทันทีแบบเรียลไทม์
-* **Modern Clean UI**: หน้าต่างโปรแกรมสไตล์มินิมอล รองรับ Dark Mode, หน้าต่าง Maximized และปุ่ม Pin ปักหมุดหน้าต่างบนสุด
-* **Safety & Privacy**: มีระบบยืนยันความเสี่ยง RPC ปลอดภัย 100% ไม่มีการเข้าถึงโทเคนหรือข้อมูลบัญชี Discord
+## Key Features
+* **Discord Quest Simulation**: Directly simulates game presence and connects to Discord RPC, allowing you to complete quests without installing large game assets.
+* **Ultra-Lightweight Dummy Runner**: Tiny runner processes (~6 KB) written with native Win32 API, using virtually zero CPU and RAM.
+* **Multi-Client RPC**: Simultaneously detects and broadcasts game presence to Discord Stable, Discord PTB, and Discord Canary in parallel.
+* **Auto-Pilot Mode**: Automatically cycles through quest queues with configurable per-game timers (5m, 10m, 15m, 20m) and real-time countdown progress bars.
+* **Steam Icon Resolution Engine**: Multi-tiered Steam game icon resolution ensuring crisp high-resolution icons for any game.
+* **Custom Game Queue & Reordering**: Easily add, remove, and reorder game quest queues using precise Move Up / Move Down controls.
+* **Multi-Language (i18n)**: Seamless multi-language support (English & Thai) with instantaneous live switching.
+* **Modern Clean UI**: Minimalist aesthetic supporting Dark Mode, maximized window states, and an Always-on-Top pin button.
+* **Safety & Privacy**: Local-only execution with RPC risk confirmation prompts. Never accesses or requests your Discord tokens or credentials.
 
 ---
 
-## ดาวน์โหลด (Downloads)
-ดาวน์โหลดเวอร์ชันล่าสุดได้ที่ [GitHub Releases](https://github.com/phwyverysad/discord-quest-completer/releases/latest):
+## Downloads
+Download the latest version from [GitHub Releases](https://github.com/phwyverysad/discord-quest-completer/releases/latest):
 
-| ไฟล์ | ขนาด | รูปแบบการใช้งาน |
+| File | Size | Type |
 | :--- | :---: | :--- |
-| **`Discord Quest Completer_1.0.0_x64-setup.exe`** | **~5.8 MB** | **ตัวติดตั้งมาตรฐาน (Setup)** ติดตั้งลงระบบและสร้างช็อตคัทบนเดสก์ท็อปให้อัตโนมัติ |
-| **`discord-quest-completer.exe`** | **~19 MB** | **โปรแกรมตัวเต็มแบบ Portable** พกพาเปิดใช้งานได้ทันทีไม่ต้องติดตั้ง |
-| **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **ไฟล์ติดตั้งระบบ (MSI)** สำหรับการติดตั้งในระดับระบบ Windows |
+| **`Discord Quest Completer_1.0.0_x64-setup.exe`** | **~5.8 MB** | **Standard Installer (Setup)** Installs to the system and creates a desktop shortcut. |
+| **`discord-quest-completer.exe`** | **~19 MB** | **Standalone Portable Executable** Runs immediately without installation. |
+| **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **Windows Package (MSI)** System-wide installer for Windows environments. |
 
-> **ความปลอดภัย (VirusTotal)**: ตรวจสอบผลการสแกนไวรัสแล้ว ปลอดภัย 100% ไร้มัลแวร์ ดูรายงานฉบับเต็มได้ที่ [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1)
+> **Security (VirusTotal)**: Verified 100% clean and malware-free. View full scan results at [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1).
 
 ---
 
-### รันจาก Source Code
+### Run from Source Code
 ```bash
-# โคลนและติดตั้ง Dependencies
+# Clone the repository and install dependencies
 git clone https://github.com/phwyverysad/discord-quest-completer.git
 cd discord-quest-completer
 pnpm install
 
-# เริ่มต้นใช้งานโปรแกรม (Development)
+# Start the application in development mode
 pnpm tauri dev
 ```
 
-### คำสั่งคอมไพล์ (Build Commands)
+### Build Commands
 ```bash
-# บิลด์ตัวรันจำลองเกม (Win Runner)
+# Build the native Windows runner
 pnpm build:runner:win
 pnpm copy:runner:win
 
-# คอมไพล์โปรแกรมเป็นไฟล์ติดตั้งและไฟล์ .exe (Release Mode)
+# Build the release executables and installer (.exe / .msi)
 pnpm tauri build
 ```
 
 ---
 
-โปรเจกต์นี้เผยแพร่ภายใต้สัญญาอนุญาต [MIT License](LICENSE) - Copyright (c) 2026 phwyverysad
+This project is licensed under the [MIT License](LICENSE) - Copyright (c) 2026 phwyverysad
