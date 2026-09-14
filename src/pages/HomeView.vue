@@ -30,7 +30,7 @@ const {
   fetchGameList,
 } = useFetchGameList();
 
-const { addLog, discordTargets, setDiscordTarget, activeRpcClients, setActiveRpcClients } = useGlobalState();
+const { addLog, discordTargets, setDiscordTarget, discordClients, activeRpcClients, setActiveRpcClients } = useGlobalState();
 const { t } = useI18n();
 
 const isAnyFetching = computed(() => isLoadingGH.value || isLoadingDiscord.value || isLoadingBundled.value);
@@ -63,6 +63,14 @@ function getSelectedDiscordTargets(): string[] {
   return list;
 }
 
+function getRunningDiscordTargets(): string[] {
+  const list: string[] = [];
+  if (discordTargets.value.stable && discordClients.value.stable) list.push('Stable');
+  if (discordTargets.value.ptb && discordClients.value.ptb) list.push('PTB');
+  if (discordTargets.value.canary && discordClients.value.canary) list.push('Canary');
+  return list;
+}
+
 let unlistenHomeConnected: (() => void) | null = null;
 let unlistenHomeDisconnect: (() => void) | null = null;
 
@@ -72,12 +80,17 @@ onMounted(async () => {
       'client_connected',
       (event) => {
         if (event.payload?.active_clients && event.payload.active_clients.length > 0) {
-          setActiveRpcClients(event.payload.active_clients);
-          addLog('info', `[Discord RPC] ${t.value.rpcBroadcastingIn}: Discord ${event.payload.active_clients.join(', Discord ')}`);
-        } else {
-          const list = getSelectedDiscordTargets();
-          setActiveRpcClients(list);
-          addLog('info', `[Discord RPC] ${t.value.rpcBroadcastingIn}: Discord ${list.join(', Discord ')}`);
+          const runningOnly = event.payload.active_clients.filter((c) => {
+            const cl = c.toLowerCase();
+            if (cl === 'stable' || cl === 'discord') return discordClients.value.stable;
+            if (cl === 'ptb') return discordClients.value.ptb;
+            if (cl === 'canary') return discordClients.value.canary;
+            return false;
+          });
+          setActiveRpcClients(runningOnly);
+          if (runningOnly.length > 0) {
+            addLog('info', `[Discord RPC] ${t.value.rpcBroadcastingIn}: Discord ${runningOnly.join(', Discord ')}`);
+          }
         }
       }
     );
@@ -634,7 +647,7 @@ async function playGame({ game, executable }: { game: Game; executable: GameExec
 
     // 1. Directly connect Discord Rich Presence (RPC) via IPC pipe so Discord status displays immediately
     try {
-      await invoke('connect_to_discord_rpc_3', {
+      const connected = await invoke<string[]>('connect_to_discord_rpc_3', {
         activity_json: JSON.stringify({
           app_id: game.id,
           details: game.quest_title || `Playing ${game.name}`,
@@ -643,11 +656,14 @@ async function playGame({ game, executable }: { game: Game; executable: GameExec
           activity_kind: 0,
         }),
         action: 'connect',
-        target_clients: getSelectedDiscordTargets(),
+        target_clients: getRunningDiscordTargets(),
       });
       isConnectedToRPC.value = true;
-      const targets = getSelectedDiscordTargets();
-      setActiveRpcClients(targets);
+      if (connected && connected.length > 0) {
+        setActiveRpcClients(connected);
+      } else {
+        setActiveRpcClients(getRunningDiscordTargets());
+      }
       addLog('info', `[Discord RPC] Connected Rich Presence for ${game.name} (${game.id})`);
     } catch (rpcErr) {
       console.warn('Discord RPC connection warning:', rpcErr);
@@ -751,7 +767,7 @@ async function continueRPCRisk(game: Game | null) {
   if (gameToTest) {
     isConnecting.value = true;
     try {
-      await invoke('connect_to_discord_rpc_3', {
+      const connected = await invoke<string[]>('connect_to_discord_rpc_3', {
         activity_json: JSON.stringify({
           app_id: gameToTest.id,
           details: gameToTest.quest_title || `Playing ${gameToTest.name}`,
@@ -760,11 +776,14 @@ async function continueRPCRisk(game: Game | null) {
           activity_kind: 0,
         }),
         action: 'connect',
-        target_clients: getSelectedDiscordTargets(),
+        target_clients: getRunningDiscordTargets(),
       });
       isConnectedToRPC.value = true;
-      const targets = getSelectedDiscordTargets();
-      setActiveRpcClients(targets);
+      if (connected && connected.length > 0) {
+        setActiveRpcClients(connected);
+      } else {
+        setActiveRpcClients(getRunningDiscordTargets());
+      }
       gameToTest.is_running = true;
       currentlyPlaying.value = gameToTest.name;
       isConnecting.value = false;

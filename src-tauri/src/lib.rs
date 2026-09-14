@@ -357,14 +357,12 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
 /// ```javascript
 /// await invoke('connect_to_discord_rpc_3', json, 'connect' | 'disconnect');
 #[tauri::command(rename_all = "snake_case")]
-fn connect_to_discord_rpc_3(
+async fn connect_to_discord_rpc_3(
     handle: AppHandle,
     activity_json: String,
     _action: String,
     target_clients: Option<Vec<String>>,
-) {
-    let app = handle.clone();
-
+) -> Result<Vec<String>, String> {
     let event_connecting = "client_connecting";
     let event_connected = "client_connected";
     let event_disconnect = "event_disconnect";
@@ -373,7 +371,7 @@ fn connect_to_discord_rpc_3(
         Ok(a) => a,
         Err(e) => {
             eprintln!("Failed to parse activity: {}", e);
-            return;
+            return Err(format!("Failed to parse activity: {}", e));
         }
     };
 
@@ -389,126 +387,121 @@ fn connect_to_discord_rpc_3(
         client_guard.take();
     }
 
-    let task = tauri::async_runtime::spawn(async move {
+    handle
+        .emit(event_connecting, connecting_payload)
+        .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
+
+    let mut act_map = serde_json::Map::new();
+    if let Some(details) = &activity.details {
+        act_map.insert("details".to_string(), serde_json::json!(details));
+    }
+    if let Some(state) = &activity.state {
+        act_map.insert("state".to_string(), serde_json::json!(state));
+    }
+    if let Some(ts) = activity.timestamp {
+        act_map.insert("timestamps".to_string(), serde_json::json!({ "start": ts }));
+    }
+    let act_kind = activity.activity_kind.unwrap_or(0);
+    act_map.insert("type".to_string(), serde_json::json!(act_kind));
+
+    if let Some(key) = &activity.large_image_key {
+        let mut assets = serde_json::Map::new();
+        assets.insert("large_image".to_string(), serde_json::json!(key));
+        if let Some(txt) = &activity.large_image_text {
+            assets.insert("large_text".to_string(), serde_json::json!(txt));
+        }
+        act_map.insert("assets".to_string(), serde_json::Value::Object(assets));
+    }
+
+    let activity_val = serde_json::Value::Object(act_map);
+
+    let connected_clients = multi_ipc::set_multi_activity(&app_id, activity_val, &targets).await;
+
+    if !connected_clients.is_empty() {
+        let connected_payload = serde_json::json!({
+            "app_id": app_id,
+            "active_clients": connected_clients,
+        });
+
         handle
-            .emit(event_connecting, connecting_payload)
+            .emit(event_connected, connected_payload)
             .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
 
-        let mut act_map = serde_json::Map::new();
-        if let Some(details) = &activity.details {
-            act_map.insert("details".to_string(), serde_json::json!(details));
-        }
-        if let Some(state) = &activity.state {
-            act_map.insert("state".to_string(), serde_json::json!(state));
-        }
-        if let Some(ts) = activity.timestamp {
-            act_map.insert("timestamps".to_string(), serde_json::json!({ "start": ts }));
-        }
-        let act_kind = activity.activity_kind.unwrap_or(0);
-        act_map.insert("type".to_string(), serde_json::json!(act_kind));
-
-        if let Some(key) = &activity.large_image_key {
-            let mut assets = serde_json::Map::new();
-            assets.insert("large_image".to_string(), serde_json::json!(key));
-            if let Some(txt) = &activity.large_image_text {
-                assets.insert("large_text".to_string(), serde_json::json!(txt));
-            }
-            act_map.insert("assets".to_string(), serde_json::Value::Object(assets));
-        }
-
-        let activity_val = serde_json::Value::Object(act_map);
-
-        let connected_clients = multi_ipc::set_multi_activity(&app_id, activity_val, &targets).await;
-
-        if !connected_clients.is_empty() {
-            let connected_payload = serde_json::json!({
-                "app_id": app_id,
-                "active_clients": connected_clients,
+        handle.listen(event_disconnect, move |_| {
+            println!("Disconnecting from Discord RPC (multi_ipc)");
+            let _ = tauri::async_runtime::spawn(async move {
+                multi_ipc::disconnect_all().await;
             });
+        });
 
-            handle
-                .emit(event_connected, connected_payload)
-                .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
-
-            handle.listen(event_disconnect, move |_| {
-                println!("Disconnecting from Discord RPC (multi_ipc)");
-                let _ = tauri::async_runtime::spawn(async move {
-                    multi_ipc::disconnect_all().await;
-                });
-            });
-        } else {
-            // Fallback to discord-sdk
-            match runner::set_activity(activity_json).await {
-                Ok(client) => {
-                    let st = check_discord_clients();
-                    let mut running_targets = Vec::new();
-                    if targets.is_empty() {
-                        if st.stable { running_targets.push("Stable".to_string()); }
-                        if st.ptb { running_targets.push("PTB".to_string()); }
-                        if st.canary { running_targets.push("Canary".to_string()); }
-                    } else {
-                        for t in &targets {
-                            let tl = t.to_lowercase();
-                            if (tl == "stable" && st.stable)
-                                || (tl == "ptb" && st.ptb)
-                                || (tl == "canary" && st.canary)
-                            {
-                                running_targets.push(t.clone());
-                            }
+        Ok(connected_clients)
+    } else {
+        // Fallback to discord-sdk
+        match runner::set_activity(activity_json).await {
+            Ok(client) => {
+                let st = check_discord_clients();
+                let mut running_targets = Vec::new();
+                if targets.is_empty() {
+                    if st.stable { running_targets.push("Stable".to_string()); }
+                    if st.ptb { running_targets.push("PTB".to_string()); }
+                    if st.canary { running_targets.push("Canary".to_string()); }
+                } else {
+                    for t in &targets {
+                        let tl = t.to_lowercase();
+                        if (tl == "stable" && st.stable)
+                            || (tl == "ptb" && st.ptb)
+                            || (tl == "canary" && st.canary)
+                        {
+                            running_targets.push(t.clone());
                         }
                     }
-                    if running_targets.is_empty() {
-                        if st.stable { running_targets.push("Stable".to_string()); }
-                        else if st.ptb { running_targets.push("PTB".to_string()); }
-                        else if st.canary { running_targets.push("Canary".to_string()); }
-                        else { running_targets.push("Stable".to_string()); }
-                    }
-
-                    let connected_payload = serde_json::json!({
-                        "app_id": app_id,
-                        "active_clients": running_targets,
-                    });
-
-                    {
-                        let mut client_guard = get_discord_client().lock().unwrap();
-                        *client_guard = Some(client);
-                    }
-
-                    handle
-                        .emit(event_connected, connected_payload)
-                        .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
-
-                    handle.listen(event_disconnect, move |_| {
-                        let _ = tauri::async_runtime::spawn(async move {
-                            multi_ipc::disconnect_all().await;
-                            let client_opt = {
-                                let mut client_guard = get_discord_client().lock().unwrap();
-                                client_guard.take()
-                            };
-                            if let Some(client) = client_opt {
-                                client.discord.disconnect().await;
-                            }
-                        });
-                    });
                 }
-                Err(e) => {
-                    eprintln!("Failed to set activity: {}", e);
-                    let error_payload = serde_json::json!({
-                        "app_id": app_id,
-                        "error": e,
-                    });
-                    let _ = handle.emit("client_error", error_payload);
+                if running_targets.is_empty() {
+                    if st.stable { running_targets.push("Stable".to_string()); }
+                    else if st.ptb { running_targets.push("PTB".to_string()); }
+                    else if st.canary { running_targets.push("Canary".to_string()); }
                 }
+
+                let connected_payload = serde_json::json!({
+                    "app_id": app_id,
+                    "active_clients": running_targets,
+                });
+
+                {
+                    let mut client_guard = get_discord_client().lock().unwrap();
+                    *client_guard = Some(client);
+                }
+
+                handle
+                    .emit(event_connected, connected_payload)
+                    .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
+
+                handle.listen(event_disconnect, move |_| {
+                    let _ = tauri::async_runtime::spawn(async move {
+                        multi_ipc::disconnect_all().await;
+                        let client_opt = {
+                            let mut client_guard = get_discord_client().lock().unwrap();
+                            client_guard.take()
+                        };
+                        if let Some(client) = client_opt {
+                            client.discord.disconnect().await;
+                        }
+                    });
+                });
+
+                Ok(running_targets)
+            }
+            Err(e) => {
+                eprintln!("Failed to set activity: {}", e);
+                let error_payload = serde_json::json!({
+                    "app_id": app_id,
+                    "error": e,
+                });
+                let _ = handle.emit("client_error", error_payload);
+                Err(format!("Failed to set activity: {}", e))
             }
         }
-    });
-
-    app.listen(event_disconnect, move |_| {
-        task.abort();
-        let _ = tauri::async_runtime::spawn(async move {
-            multi_ipc::disconnect_all().await;
-        });
-    });
+    }
 }
 
 #[tauri::command(rename_all = "snake_case")]

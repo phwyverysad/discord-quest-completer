@@ -11,22 +11,10 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 const appState = useGlobalState();
-const { page, setPage, discordTargets, setDiscordTarget, activeRpcClients, setActiveRpcClients } = appState;
+const { page, setPage, discordTargets, setDiscordTarget, discordClients, setDiscordClients, activeRpcClients, setActiveRpcClients } = appState;
 const { t } = useI18n();
 
 const showAbout = ref(false);
-
-interface DiscordClientsStatus {
-  stable: boolean;
-  ptb: boolean;
-  canary: boolean;
-}
-
-const discordClients = ref<DiscordClientsStatus>({
-  stable: false,
-  ptb: false,
-  canary: false,
-});
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let unlistenConnected: (() => void) | null = null;
@@ -34,50 +22,51 @@ let unlistenDisconnect: (() => void) | null = null;
 
 async function checkDiscordStatus() {
   try {
-    const res = await invoke<DiscordClientsStatus>('check_discord_clients');
+    const res = await invoke<{ stable: boolean; ptb: boolean; canary: boolean }>('check_discord_clients');
     if (res) {
-      discordClients.value = res;
+      setDiscordClients(res);
     }
   } catch {
     // Fallback or outside Tauri runtime
   }
 }
 
+function isClientRunning(client: 'Stable' | 'PTB' | 'Canary'): boolean {
+  if (client === 'Stable') return discordClients.value.stable;
+  if (client === 'PTB') return discordClients.value.ptb;
+  if (client === 'Canary') return discordClients.value.canary;
+  return false;
+}
+
 function isRpcActive(client: 'Stable' | 'PTB' | 'Canary'): boolean {
+  // CRITICAL: A Discord client CANNOT be RPC ACTIVE if the process is NOT running on the OS!
+  if (!isClientRunning(client)) {
+    return false;
+  }
+
   const cLower = client.toLowerCase();
   const directMatch = activeRpcClients.value.some((c) => c.toLowerCase() === cLower);
   if (directMatch) return true;
 
-  const genericMatch = activeRpcClients.value.some((c) => c.toLowerCase() === 'discord' || c.toLowerCase() === 'all');
-  const isRunning =
-    client === 'Stable'
-      ? discordClients.value.stable
-      : client === 'PTB'
-      ? discordClients.value.ptb
-      : discordClients.value.canary;
-
-  return genericMatch && isRunning;
+  const genericMatch = activeRpcClients.value.some(
+    (c) => c.toLowerCase() === 'discord' || c.toLowerCase() === 'all'
+  );
+  return genericMatch;
 }
 
 onMounted(async () => {
   checkDiscordStatus();
-  pollTimer = setInterval(checkDiscordStatus, 4000);
+  pollTimer = setInterval(checkDiscordStatus, 3000);
 
   try {
     unlistenConnected = await listen<{ app_id?: string; active_clients?: string[] }>(
       'client_connected',
       (event) => {
         if (event.payload?.active_clients && event.payload.active_clients.length > 0) {
-          const mapped = event.payload.active_clients.map((c) =>
-            c.toLowerCase() === 'discord' ? 'Stable' : c
-          );
+          const mapped = event.payload.active_clients
+            .map((c) => (c.toLowerCase() === 'discord' ? 'Stable' : c))
+            .filter((c) => isClientRunning(c as 'Stable' | 'PTB' | 'Canary'));
           setActiveRpcClients(mapped);
-        } else {
-          const list: string[] = [];
-          if (discordTargets.value.stable) list.push('Stable');
-          if (discordTargets.value.ptb) list.push('PTB');
-          if (discordTargets.value.canary) list.push('Canary');
-          setActiveRpcClients(list);
         }
       }
     );

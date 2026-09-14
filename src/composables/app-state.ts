@@ -18,6 +18,12 @@ export interface DiscordTargets {
     canary: boolean;
 }
 
+export interface DiscordClientsStatus {
+    stable: boolean;
+    ptb: boolean;
+    canary: boolean;
+}
+
 export interface UseGlobalStateReturn {
     page: ShallowRef<Pages>,
     count: ShallowRef<number>,
@@ -32,6 +38,8 @@ export interface UseGlobalStateReturn {
     clearLogs: () => void,
     discordTargets: ShallowRef<DiscordTargets>,
     setDiscordTarget: (client: 'stable' | 'ptb' | 'canary', value: boolean) => void,
+    discordClients: ShallowRef<DiscordClientsStatus>,
+    setDiscordClients: (status: DiscordClientsStatus) => void,
     activeRpcClients: ShallowRef<string[]>,
     setActiveRpcClients: (clients: string[]) => void,
 }
@@ -48,6 +56,12 @@ export const useGlobalState = createGlobalState(
       stable: true,
       ptb: true,
       canary: true,
+    })
+
+    const discordClients = shallowRef<DiscordClientsStatus>({
+      stable: false,
+      ptb: false,
+      canary: false,
     })
 
     const activeRpcClients = shallowRef<string[]>([])
@@ -69,6 +83,10 @@ export const useGlobalState = createGlobalState(
         ...discordTargets.value,
         [client]: value,
       }
+    }
+
+    function setDiscordClients(status: DiscordClientsStatus) {
+      discordClients.value = status;
     }
 
     function setActiveRpcClients(clients: string[]) {
@@ -102,6 +120,8 @@ export const useGlobalState = createGlobalState(
         clearLogs,
         discordTargets,
         setDiscordTarget,
+        discordClients,
+        setDiscordClients,
         activeRpcClients,
         setActiveRpcClients,
     } as UseGlobalStateReturn
