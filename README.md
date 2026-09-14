@@ -18,6 +18,12 @@ Discord Quest Completer คือโปรแกรมสำหรับรั�
 
 ---
 
+## วิดีโอสอนใช้งาน (Tutorial Video)
+
+https://github.com/phwyverysad/discord-quest-completer/raw/main/docs/tutorial.mp4
+
+---
+
 ## ฟีเจอร์เด่น (Key Features)
 * **Discord Quest Simulation**: จำลองสถานะเกมและเชื่อมต่อ Discord RPC โดยตรง ทำเควสต์สำเร็จได้โดยไม่ต้องติดตั้งตัวเกมจริง
 * **Ultra-Lightweight Dummy Runner**: ตัวจำลอง Process ขนาดจิ๋ว (~6 KB) พัฒนาด้วย Win32 API กินทรัพยากรเครื่องต่ำมาก แทบไม่ใช้ RAM และ CPU
@@ -40,7 +46,7 @@ Discord Quest Completer คือโปรแกรมสำหรับรั�
 | **`discord-quest-completer.exe`** | **~19 MB** | **โปรแกรมตัวเต็มแบบ Portable** พกพาเปิดใช้งานได้ทันทีไม่ต้องติดตั้ง |
 | **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **ไฟล์ติดตั้งระบบ (MSI)** สำหรับการติดตั้งในระดับระบบ Windows |
 
-> 🛡️ **ความปลอดภัย (VirusTotal)**: ตรวจสอบผลการสแกนไวรัสแล้ว ปลอดภัย 100% ไร้มัลแวร์ ดูรายงานฉบับเต็มได้ที่ [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1)
+> **ความปลอดภัย (VirusTotal)**: ตรวจสอบผลการสแกนไวรัสแล้ว ปลอดภัย 100% ไร้มัลแวร์ ดูรายงานฉบับเต็มได้ที่ [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1)
 
 ---
 
