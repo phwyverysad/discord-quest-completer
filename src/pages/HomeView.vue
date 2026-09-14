@@ -839,33 +839,33 @@ provide<GameActionsProvider>(GameActionsKey, {
     <!-- Center Dialog for Warnings -->
     <dialog
       id="dialog"
-      class="dialogStyle bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-6 max-w-md w-full backdrop:bg-black/50 backdrop:backdrop-blur-xs"
-      style="position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0;"
+      class="dialogStyle bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-3xl shadow-2xl p-6 max-w-md w-full backdrop:bg-black/50 backdrop:backdrop-blur-xs select-none"
+      style="position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; user-select: none; -webkit-user-select: none;"
       ref="dialogRef"
     >
-      <div class="flex flex-col items-center text-center">
-        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center mb-4">
+      <div class="flex flex-col items-center text-center select-none" style="user-select: none; -webkit-user-select: none;">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center mb-4 select-none">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
 
-        <div class="mb-5 text-sm text-slate-600 dark:text-slate-300">
-          <div v-if="dialogKey === 'rpc_message_1'" class="space-y-2 text-left">
-            <h3 class="font-bold text-base text-slate-900 dark:text-white text-center">
+        <div class="mb-5 text-sm text-slate-600 dark:text-slate-300 select-none" style="user-select: none; -webkit-user-select: none;">
+          <div v-if="dialogKey === 'rpc_message_1'" class="space-y-2 text-left select-none">
+            <h3 class="font-bold text-base text-slate-900 dark:text-white text-center select-none">
               {{ t.dialogRpcWarningTitle }}
             </h3>
-            <p>{{ t.dialogRpcWarningDesc1 }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
+            <p class="select-none">{{ t.dialogRpcWarningDesc1 }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 select-none">
               {{ t.dialogRpcWarningDesc2 }}
             </p>
-            <p class="font-medium text-amber-600 dark:text-amber-400">
+            <p class="font-medium text-amber-600 dark:text-amber-400 select-none">
               {{ t.dialogRpcWarningDesc3 }}
             </p>
           </div>
 
-          <div v-if="dialogKey === 'no_game_selected'">
-            <p class="font-medium">{{ t.noGameSelectedMsg }}</p>
+          <div v-if="dialogKey === 'no_game_selected'" class="select-none">
+            <p class="font-medium select-none">{{ t.noGameSelectedMsg }}</p>
           </div>
         </div>
 
@@ -1417,6 +1417,11 @@ provide<GameActionsProvider>(GameActionsKey, {
 </template>
 
 <style scoped>
+dialog, .dialogStyle, #dialog, #dialog * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

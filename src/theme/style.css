@@ -63,6 +63,25 @@
 
 body {
   letter-spacing: -0.012em;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* App-wide native desktop feel: disable text selection except on inputs */
+*, *::before, *::after {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Dialog selection reset prevention */
+dialog, dialog * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 /* Smooth theme transitions */
