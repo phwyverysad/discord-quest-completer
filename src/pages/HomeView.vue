@@ -634,7 +634,6 @@ async function playGame({ game, executable }: { game: Game; executable: GameExec
 
     // 1. Directly connect Discord Rich Presence (RPC) via IPC pipe so Discord status displays immediately
     try {
-      emit('event_disconnect');
       await invoke('connect_to_discord_rpc_3', {
         activity_json: JSON.stringify({
           app_id: game.id,
@@ -647,6 +646,8 @@ async function playGame({ game, executable }: { game: Game; executable: GameExec
         target_clients: getSelectedDiscordTargets(),
       });
       isConnectedToRPC.value = true;
+      const targets = getSelectedDiscordTargets();
+      setActiveRpcClients(targets);
       addLog('info', `[Discord RPC] Connected Rich Presence for ${game.name} (${game.id})`);
     } catch (rpcErr) {
       console.warn('Discord RPC connection warning:', rpcErr);
@@ -750,7 +751,6 @@ async function continueRPCRisk(game: Game | null) {
   if (gameToTest) {
     isConnecting.value = true;
     try {
-      emit('event_disconnect');
       await invoke('connect_to_discord_rpc_3', {
         activity_json: JSON.stringify({
           app_id: gameToTest.id,
@@ -763,6 +763,8 @@ async function continueRPCRisk(game: Game | null) {
         target_clients: getSelectedDiscordTargets(),
       });
       isConnectedToRPC.value = true;
+      const targets = getSelectedDiscordTargets();
+      setActiveRpcClients(targets);
       gameToTest.is_running = true;
       currentlyPlaying.value = gameToTest.name;
       isConnecting.value = false;

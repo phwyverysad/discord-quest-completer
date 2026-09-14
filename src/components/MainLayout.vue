@@ -43,6 +43,22 @@ async function checkDiscordStatus() {
   }
 }
 
+function isRpcActive(client: 'Stable' | 'PTB' | 'Canary'): boolean {
+  const cLower = client.toLowerCase();
+  const directMatch = activeRpcClients.value.some((c) => c.toLowerCase() === cLower);
+  if (directMatch) return true;
+
+  const genericMatch = activeRpcClients.value.some((c) => c.toLowerCase() === 'discord' || c.toLowerCase() === 'all');
+  const isRunning =
+    client === 'Stable'
+      ? discordClients.value.stable
+      : client === 'PTB'
+      ? discordClients.value.ptb
+      : discordClients.value.canary;
+
+  return genericMatch && isRunning;
+}
+
 onMounted(async () => {
   checkDiscordStatus();
   pollTimer = setInterval(checkDiscordStatus, 4000);
@@ -52,7 +68,10 @@ onMounted(async () => {
       'client_connected',
       (event) => {
         if (event.payload?.active_clients && event.payload.active_clients.length > 0) {
-          setActiveRpcClients(event.payload.active_clients);
+          const mapped = event.payload.active_clients.map((c) =>
+            c.toLowerCase() === 'discord' ? 'Stable' : c
+          );
+          setActiveRpcClients(mapped);
         } else {
           const list: string[] = [];
           if (discordTargets.value.stable) list.push('Stable');
@@ -178,7 +197,7 @@ onUnmounted(() => {
             <div
               class="flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all border text-xs"
               :class="[
-                activeRpcClients.includes('Stable')
+                isRpcActive('Stable')
                   ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
                   : discordClients.stable
                     ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30 text-slate-900 dark:text-white shadow-xs'
@@ -193,7 +212,7 @@ onUnmounted(() => {
                 </span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                <template v-if="activeRpcClients.includes('Stable')">
+                <template v-if="isRpcActive('Stable')">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -221,7 +240,7 @@ onUnmounted(() => {
             <div
               class="flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all border text-xs"
               :class="[
-                activeRpcClients.includes('PTB')
+                isRpcActive('PTB')
                   ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
                   : discordClients.ptb
                     ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30 text-slate-900 dark:text-white shadow-xs'
@@ -236,7 +255,7 @@ onUnmounted(() => {
                 </span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                <template v-if="activeRpcClients.includes('PTB')">
+                <template v-if="isRpcActive('PTB')">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -264,7 +283,7 @@ onUnmounted(() => {
             <div
               class="flex items-center justify-between px-2.5 py-1.5 rounded-xl transition-all border text-xs"
               :class="[
-                activeRpcClients.includes('Canary')
+                isRpcActive('Canary')
                   ? 'bg-emerald-500/15 border-emerald-500/50 shadow-xs ring-1 ring-emerald-500/30'
                   : discordClients.canary
                     ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/30 text-slate-900 dark:text-white shadow-xs'
@@ -279,7 +298,7 @@ onUnmounted(() => {
                 </span>
               </div>
               <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                <template v-if="activeRpcClients.includes('Canary')">
+                <template v-if="isRpcActive('Canary')">
                   <span class="relative flex h-2 w-2">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>

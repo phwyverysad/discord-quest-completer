@@ -440,9 +440,33 @@ fn connect_to_discord_rpc_3(
             // Fallback to discord-sdk
             match runner::set_activity(activity_json).await {
                 Ok(client) => {
+                    let st = check_discord_clients();
+                    let mut running_targets = Vec::new();
+                    if targets.is_empty() {
+                        if st.stable { running_targets.push("Stable".to_string()); }
+                        if st.ptb { running_targets.push("PTB".to_string()); }
+                        if st.canary { running_targets.push("Canary".to_string()); }
+                    } else {
+                        for t in &targets {
+                            let tl = t.to_lowercase();
+                            if (tl == "stable" && st.stable)
+                                || (tl == "ptb" && st.ptb)
+                                || (tl == "canary" && st.canary)
+                            {
+                                running_targets.push(t.clone());
+                            }
+                        }
+                    }
+                    if running_targets.is_empty() {
+                        if st.stable { running_targets.push("Stable".to_string()); }
+                        else if st.ptb { running_targets.push("PTB".to_string()); }
+                        else if st.canary { running_targets.push("Canary".to_string()); }
+                        else { running_targets.push("Stable".to_string()); }
+                    }
+
                     let connected_payload = serde_json::json!({
                         "app_id": app_id,
-                        "active_clients": vec!["Discord"],
+                        "active_clients": running_targets,
                     });
 
                     {

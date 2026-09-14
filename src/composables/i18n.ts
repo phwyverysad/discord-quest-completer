@@ -137,6 +137,28 @@ export interface Translations {
   fetchingFromMirror: string;
   fetchingFromDiscord: string;
   fetchingFromBundle: string;
+
+  // Settings Tabs & Sound
+  tabGeneral: string;
+  tabLanguage: string;
+  tabTheme: string;
+  tabAdvanced: string;
+  tabSound: string;
+  tabDiscordRpc: string;
+  soundSection: string;
+  soundProfile: string;
+  soundProfileDesc: string;
+  soundCustom: string;
+  soundCustomDesc: string;
+  uploadCustomSound: string;
+  soundVolume: string;
+  soundVolumeLabel: string;
+  soundVolumeDesc: string;
+  discordRpcTargets: string;
+  discordRpcTargetsDesc: string;
+  discordStableLabel: string;
+  discordPtbLabel: string;
+  discordCanaryLabel: string;
 }
 
 const enTranslations: Translations = {
@@ -246,7 +268,28 @@ const enTranslations: Translations = {
   bundlePreloaded: 'Game list pre-loaded from bundle',
   fetchingFromMirror: 'Fetching game list from GitHub mirror...',
   fetchingFromDiscord: 'Fetching game list directly from Discord...',
-  fetchingFromBundle: 'Loading game list from bundle...'
+  fetchingFromBundle: 'Loading game list from bundle...',
+
+  tabGeneral: 'General',
+  tabLanguage: 'Language',
+  tabTheme: 'Theme',
+  tabAdvanced: 'Advanced',
+  tabSound: 'Sound',
+  tabDiscordRpc: 'Discord RPC',
+  soundSection: 'Click Sounds',
+  soundProfile: 'Sound Profile',
+  soundProfileDesc: 'Play when clicking buttons and interactive elements',
+  soundCustom: 'Custom Sound',
+  soundCustomDesc: 'Use .mp3 or .wav file as click sound, should be short',
+  uploadCustomSound: 'Add Custom Sound',
+  soundVolume: 'Volume',
+  soundVolumeLabel: 'Click Volume',
+  soundVolumeDesc: 'Drag to adjust click volume',
+  discordRpcTargets: 'Target Discord Clients',
+  discordRpcTargetsDesc: 'Select which Discord apps to broadcast rich presence to',
+  discordStableLabel: 'Discord Stable',
+  discordPtbLabel: 'Discord PTB',
+  discordCanaryLabel: 'Discord Canary'
 };
 
 const thTranslations: Translations = {
@@ -356,7 +399,28 @@ const thTranslations: Translations = {
   bundlePreloaded: 'โหลดรายการเกมเริ่มต้นสำเร็จ',
   fetchingFromMirror: 'กำลังดึงรายการเกมจาก Mirror...',
   fetchingFromDiscord: 'กำลังดึงรายการเกมจาก Discord...',
-  fetchingFromBundle: 'กำลังโหลดรายการเกมจากบันเดิล...'
+  fetchingFromBundle: 'กำลังโหลดรายการเกมจากบันเดิล...',
+
+  tabGeneral: 'ทั่วไป',
+  tabLanguage: 'ภาษา',
+  tabTheme: 'ธีม',
+  tabAdvanced: 'ขั้นสูง',
+  tabSound: 'เสียง',
+  tabDiscordRpc: 'Discord RPC',
+  soundSection: 'เสียงคลิก',
+  soundProfile: 'โพรไฟล์เสียง',
+  soundProfileDesc: 'เล่นเมื่อคลิกปุ่มและองค์ประกอบที่โต้ตอบได้',
+  soundCustom: 'เสียงกำหนดเอง',
+  soundCustomDesc: 'ใช้ไฟล์ .mp3 หรือ .wav เป็นเสียงคลิกได้ ควรเป็นเสียงสั้น ๆ',
+  uploadCustomSound: 'เพิ่มเสียงกำหนดเอง',
+  soundVolume: 'ระดับเสียง',
+  soundVolumeLabel: 'ระดับเสียงคลิก',
+  soundVolumeDesc: 'ลากเพื่อปรับความดังของเสียงคลิก',
+  discordRpcTargets: 'ไคลเอนต์ Discord เป้าหมาย',
+  discordRpcTargetsDesc: 'เลือกไคลเอนต์ Discord ที่ต้องการส่ง Rich Presence',
+  discordStableLabel: 'Discord Stable',
+  discordPtbLabel: 'Discord PTB',
+  discordCanaryLabel: 'Discord Canary'
 };
 
 const jaTranslations: Translations = {
