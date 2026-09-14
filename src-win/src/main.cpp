@@ -18,7 +18,7 @@ P_CreateFontW f_CreateFontW;
 P_DeleteObject f_DeleteObject;
 
 wchar_t g_szGameName[256] = L"Discord Quest Completer";
-const wchar_t* GITHUB_URL = L"https://github.com/phwyverysad/Discord-Quest-Orbs";
+const wchar_t* GITHUB_URL = L"https://github.com/phwyverysad/discord-quest-completer";
 NOTIFYICONDATAW nid = { 0 };
 HFONT hFontTitle = NULL, hFontText = NULL;
 

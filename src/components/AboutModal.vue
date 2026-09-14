@@ -11,9 +11,9 @@ const { t } = useI18n();
 
 async function openGitHub() {
   try {
-    await openUrl('https://github.com/phwyverysad/Discord-Quest-Orbs');
+    await openUrl('https://github.com/phwyverysad/discord-quest-completer');
   } catch (err) {
-    window.open('https://github.com/phwyverysad/Discord-Quest-Orbs', '_blank');
+    window.open('https://github.com/phwyverysad/discord-quest-completer', '_blank');
   }
 }
 </script>

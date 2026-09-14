@@ -1,17 +1,17 @@
-﻿# Discord Quest Orbs
+# Discord Quest Completer
 
 <div align="center">
 
 **โปรแกรมช่วยทำเควสต์เกม Discord อัตโนมัติ ปลอดภัย และไม่จำเป็นต้องติดตั้งตัวเกมจริง**
 
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/phwyverysad/Discord-Quest-Orbs)
+[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/phwyverysad/discord-quest-completer)
 [![Framework](https://img.shields.io/badge/Framework-Tauri%202-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
 [![Frontend](https://img.shields.io/badge/Frontend-Vue%203%20%7C%20TailwindCSS-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![Backend](https://img.shields.io/badge/Backend-Rust-DEA584?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=flat-square)](https://github.com/phwyverysad/Discord-Quest-Orbs/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/phwyverysad/Discord-Quest-Orbs?style=flat-square&color=gold)](https://github.com/phwyverysad/Discord-Quest-Orbs/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/phwyverysad/Discord-Quest-Orbs?style=flat-square&color=orange)](https://github.com/phwyverysad/Discord-Quest-Orbs/issues)
+[![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=flat-square)](https://github.com/phwyverysad/discord-quest-completer/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/phwyverysad/discord-quest-completer?style=flat-square&color=gold)](https://github.com/phwyverysad/discord-quest-completer/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/phwyverysad/discord-quest-completer?style=flat-square&color=orange)](https://github.com/phwyverysad/discord-quest-completer/issues)
 
 [ภาพรวม](#ภาพรวม) | [ฟีเจอร์หลัก](#ฟีเจอร์หลัก) | [การใช้งาน](#การใช้งาน) | [การคอมไพล์จาก Source Code](#การคอมไพล์จาก-source-code) | [ความปลอดภัยและประสิทธิภาพ](#ความปลอดภัยและประสิทธิภาพ) | [สัญญาอนุญาต](#สัญญาอนุญาต)
 
@@ -21,7 +21,7 @@
 
 ## ภาพรวม
 
-**Discord Quest Orbs** คือแอปพลิเคชันสำหรับ Windows ที่พัฒนาด้วย Tauri 2 (Rust + Vue 3) ออกแบบมาเพื่อจำลองสถานะการเล่นเกม (Rich Presence / RPC) และรัน Process เกมจำลองขนาดจิ๋ว ช่วยให้ผู้ใช้สามารถทำภารกิจ **Discord Quests** ได้จนจบโดยไม่จำเป็นต้องดาวน์โหลดหรือติดตั้งตัวเกมจริงขนาดใหญ่ ประหยัดพื้นที่จัดเก็บข้อมูล และมีระบบ Auto-Pilot สลับเกมให้อัตโนมัติ
+**Discord Quest Completer** คือแอปพลิเคชันสำหรับ Windows ที่พัฒนาด้วย Tauri 2 (Rust + Vue 3) ออกแบบมาเพื่อจำลองสถานะการเล่นเกม (Rich Presence / RPC) และรัน Process เกมจำลองขนาดจิ๋ว ช่วยให้ผู้ใช้สามารถทำภารกิจ **Discord Quests** ได้จนจบโดยไม่จำเป็นต้องดาวน์โหลดหรือติดตั้งตัวเกมจริงขนาดใหญ่ ประหยัดพื้นที่จัดเก็บข้อมูล และมีระบบ Auto-Pilot สลับเกมให้อัตโนมัติ
 
 ---
 
@@ -44,7 +44,7 @@
 
 ## การใช้งาน
 
-1. **ดาวน์โหลดและเปิดโปรแกรม**: ดาวน์โหลดไฟล์ `Discord Quest Completer_1.0.0_x64-setup.exe` หรือไฟล์ Portable `.exe` จากหน้า [Releases](https://github.com/phwyverysad/Discord-Quest-Orbs/releases)
+1. **ดาวน์โหลดและเปิดโปรแกรม**: ดาวน์โหลดไฟล์ `Discord Quest Completer_1.0.0_x64-setup.exe` หรือไฟล์ Portable `.exe` จากหน้า [Releases](https://github.com/phwyverysad/discord-quest-completer/releases)
 2. **เลือกหรือเพิ่มเกม**: ค้นหาชื่อเกมหรือเควสต์ที่ต้องการจากช่องค้นหาด้านบน แล้วกด **เพิ่มลงรายการเกม**
 3. **เริ่มเล่นเกมหรือทำเควสต์**: 
    * **กดเล่นรายเกม**: คลิกปุ่ม **เล่น** ในการ์ดย่อยทางขวา กดยอมรับความเสี่ยง แล้วปล่อยให้โปรแกรมจำลองการเล่นตามเวลาที่เควสต์กำหนด
@@ -63,8 +63,8 @@
 ### ขั้นตอนการคอมไพล์
 1. คลอนคลังข้อมูล (Repository)
    ```bash
-   git clone https://github.com/phwyverysad/Discord-Quest-Orbs.git
-   cd Discord-Quest-Orbs
+   git clone https://github.com/phwyverysad/discord-quest-completer.git
+   cd discord-quest-completer
    ```
 
 2. ติดตั้ง Dependencies

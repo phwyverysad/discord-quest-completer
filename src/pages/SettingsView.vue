@@ -606,7 +606,7 @@ onMounted(() => {
 
           <div>
             <a
-              href="https://github.com/phwyverysad/Discord-Quest-Orbs"
+              href="https://github.com/phwyverysad/discord-quest-completer"
               target="_blank"
               class="text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 font-medium"
             >
