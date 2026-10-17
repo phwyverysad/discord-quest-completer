@@ -9,7 +9,7 @@ import IconVerified from '@/components/IconVerified.vue';
 import IconDiscord from '@/components/IconDiscord.vue';
 import { isEmpty } from 'lodash-es';
 import GameExecutables from '@/components/GameExecutables.vue';
-import { GameActionsKey } from '@/constants/constants';
+import { GameActionsKey, getCurrentOS } from '@/constants/constants';
 import { emit, listen } from '@tauri-apps/api/event';
 import { useFetchGameList } from '@/composables/fetch-gamelist';
 import { UseFuseOptions } from '@vueuse/integrations';
@@ -18,7 +18,7 @@ import { useGlobalState } from '@/composables/app-state';
 import { useI18n } from '@/composables/i18n';
 import GameIcon from '@/components/GameIcon.vue';
 import { useAutoPilot } from '@/composables/auto-pilot';
-import { appIconCache } from '@/services/icon-service';
+import { appIconCache, getGameIconUrl } from '@/services/icon-service';
 import { useAppSettings } from '@/composables/settings';
 import { useSound } from '@/composables/sound';
 
@@ -33,7 +33,7 @@ const {
 } = useFetchGameList();
 
 const { addLog, discordTargets, setDiscordTarget, discordClients, activeRpcClients, setActiveRpcClients } = useGlobalState();
-const { t } = useI18n();
+const { t, currentLocale } = useI18n();
 
 const isAnyFetching = computed(() => isLoadingGH.value || isLoadingDiscord.value || isLoadingBundled.value);
 
@@ -107,6 +107,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  stopPlaytimeTimer();
   if (unlistenHomeConnected) unlistenHomeConnected();
   if (unlistenHomeDisconnect) unlistenHomeDisconnect();
 });
@@ -384,12 +385,64 @@ watch(searchQuery, async (newQuery) => {
   }
 });
 
+function ensureGameHasExecutable(game: Game): Game {
+  const currentPlatform = getCurrentOS();
+  if (!Array.isArray(game.executables) || game.executables.length === 0) {
+    const rawName = game.name || 'Game';
+    const cleanFilename = `${rawName.replace(/[^a-zA-Z0-9_-]/g, '_')}.exe`;
+    game.executables = [
+      {
+        is_launcher: false,
+        name: `${rawName}.exe`,
+        filename: cleanFilename,
+        os: currentPlatform,
+        is_installed: false,
+      },
+    ];
+  } else {
+    for (const exe of game.executables) {
+      if (!exe.os) exe.os = currentPlatform;
+      if (!exe.filename) {
+        exe.filename = exe.name.split(/[/\\]/).pop() || `${(game.name || 'Game').replace(/[^a-zA-Z0-9_-]/g, '_')}.exe`;
+      }
+    }
+    const hasCurrentOs = game.executables.some((e) => e.os === currentPlatform);
+    if (!hasCurrentOs) {
+      const rawName = game.name || 'Game';
+      const cleanFilename = `${rawName.replace(/[^a-zA-Z0-9_-]/g, '_')}.exe`;
+      game.executables.push({
+        is_launcher: false,
+        name: `${rawName}.exe`,
+        filename: cleanFilename,
+        os: currentPlatform,
+        is_installed: false,
+      });
+    }
+  }
+  return game;
+}
+
 // Selected games list with persistence
 const savedGames = localStorage.getItem('dqc_selected_games');
 let initialGames: Game[] = [];
 if (savedGames) {
   try {
     initialGames = JSON.parse(savedGames);
+    initialGames.forEach((g) => {
+      ensureGameHasExecutable(g);
+      if (!g.uid) {
+        g.uid = g.id ? `${g.id}-${randomString()}` : randomString();
+      }
+      g.is_running = false;
+      if (typeof g.played_seconds !== 'number') {
+        g.played_seconds = 0;
+      }
+      if (Array.isArray(g.executables)) {
+        g.executables.forEach((e) => {
+          e.is_running = false;
+        });
+      }
+    });
   } catch {}
 }
 const gameList = ref<Game[]>(initialGames);
@@ -404,8 +457,13 @@ function isGameAlreadyAdded(gameId: string): boolean {
 }
 
 const selectedGame = computed(() => {
-  if (!selectedGameId.value) return null;
-  return gameList.value.find((g) => g.uid === selectedGameId.value) || null;
+  const found = (selectedGameId.value
+    ? gameList.value.find((g) => g.uid === selectedGameId.value || g.id === selectedGameId.value)
+    : null) || gameList.value[0] || null;
+  if (found) {
+    ensureGameHasExecutable(found);
+  }
+  return found;
 });
 
 function closeSearchResults() {
@@ -419,8 +477,10 @@ function addGameToList(game: Game) {
   if (!isGameAlreadyAdded(game.id)) {
     const newGame: Game = {
       uid: randomString(),
+      played_seconds: 0,
       ...game,
     };
+    ensureGameHasExecutable(newGame);
     gameList.value.push(newGame);
     saveGameList();
     if (!selectedGameId.value) {
@@ -466,6 +526,66 @@ function moveGameDown(index: number) {
   }
 }
 
+// Playtime Tracking & Timer
+function formatPlaytime(seconds: number = 0): string {
+  const sec = Math.max(0, Math.floor(seconds || 0));
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  if (currentLocale.value === 'th') {
+    if (m === 0 && s === 0) return '0 วินาที';
+    if (m === 0) return `${s} วินาที`;
+    if (s === 0) return `${m} นาที`;
+    return `${m} นาที ${s} วินาที`;
+  }
+  if (m === 0 && s === 0) return '0s';
+  if (m === 0) return `${s}s`;
+  if (s === 0) return `${m}m`;
+  return `${m}m ${s}s`;
+}
+
+let playtimeInterval: ReturnType<typeof setInterval> | null = null;
+
+function startPlaytimeTimer() {
+  if (playtimeInterval) return;
+  playtimeInterval = setInterval(() => {
+    let hasRunningGame = false;
+    for (const g of gameList.value) {
+      const isThisRunning = Boolean(
+        g.is_running ||
+        (currentlyPlaying.value && (currentlyPlaying.value === g.name || currentlyPlaying.value === g.id))
+      );
+      if (isThisRunning) {
+        g.is_running = true;
+        hasRunningGame = true;
+        g.played_seconds = (g.played_seconds || 0) + 1;
+      }
+    }
+    // Auto-save every 5 seconds while running
+    if (hasRunningGame && Date.now() % 5000 < 1000) {
+      saveGameList();
+    }
+    if (!hasRunningGame && !currentlyPlaying.value) {
+      stopPlaytimeTimer();
+    }
+  }, 1000);
+}
+
+function stopPlaytimeTimer() {
+  if (playtimeInterval) {
+    clearInterval(playtimeInterval);
+    playtimeInterval = null;
+  }
+  saveGameList();
+}
+
+function resetGamePlaytime(game: Game) {
+  game.played_seconds = 0;
+  saveGameList();
+  try {
+    playClickSound();
+  } catch {}
+}
+
 // Auto-Pilot Composable Integration
 const {
   isAutoPilotActive,
@@ -488,75 +608,144 @@ function addQuestGameToList() {
   }
 }
 
+async function startDiscordRPC(game: Game) {
+  const activityPayload: any = {
+    app_id: game.id,
+    details: game.quest_title || `Playing ${game.name}`,
+    state: 'In Game',
+    timestamp: Math.floor(Date.now() / 1000),
+    activity_kind: 0,
+  };
+  if (game.icon_hash) {
+    activityPayload.largeImageKey = game.icon_hash;
+    activityPayload.largeImageText = game.name;
+  }
+  try {
+    const connected = await invoke<string[]>('connect_to_discord_rpc_3', {
+      activity_json: JSON.stringify(activityPayload),
+      action: 'connect',
+      target_clients: [],
+    });
+    isConnectedToRPC.value = true;
+    if (connected && connected.length > 0) {
+      setActiveRpcClients(connected);
+      addLog('info', `[Discord RPC] Active on: ${connected.join(', ')}`);
+    } else {
+      addLog('info', `[Discord RPC] Broadcasted to Discord clients`);
+    }
+  } catch (rpcErr) {
+    console.warn('Discord RPC warning:', rpcErr);
+    addLog('warning', `[Discord RPC] ${rpcErr}`);
+  }
+}
+
+async function stopDiscordRPC() {
+  try {
+    await invoke('disconnect_discord_rpc');
+    emit('event_disconnect');
+    setActiveRpcClients([]);
+    isConnectedToRPC.value = false;
+    addLog('info', '[Discord RPC] Disconnected');
+  } catch (e) {
+    console.warn('Error disconnecting RPC:', e);
+  }
+}
+
+async function launchGameForAutoPilot(game: Game) {
+  // Stop other running game executables first
+  for (const g of gameList.value) {
+    if (g.is_running && g.uid !== game.uid) {
+      for (const exe of g.executables) {
+        if (exe.is_running && exe.filename) {
+          try {
+            await invoke('stop_process', { exec_name: exe.filename });
+          } catch {}
+          exe.is_running = false;
+        }
+      }
+      g.is_running = false;
+    }
+  }
+
+  const currentPlatform = getCurrentOS();
+  const exe = game.executables.find((e) => e.os === currentPlatform) || game.executables[0];
+  if (!exe) return;
+
+  const execPayload: GameExecutable = {
+    path: exe.path || (exe.name.includes('/') || exe.name.includes('\\') ? exe.name.split(/[/\\]/).slice(0, -1).join('/') : ''),
+    segments: exe.segments || exe.name.split(/[/\\]/).length,
+    filename: exe.filename || exe.name.split(/[/\\]/).pop() || '',
+    ...exe,
+  };
+
+  try {
+    await createDummyGame(game, execPayload);
+
+    // Launch background game runner for Discord Quest detection
+    const gameIconUrl = getGameIconUrl(game);
+    await invoke('run_background_process', {
+      name: game.name,
+      path: execPayload.path,
+      executable_name: execPayload.filename,
+      path_len: execPayload.segments,
+      app_id: String(game.id),
+      icon_url: gameIconUrl || null,
+    });
+    game.running_executable = exe.name;
+    game.is_running = true;
+    exe.is_running = true;
+    currentlyPlaying.value = game.name;
+    gameList.value.forEach((g) => {
+      g.is_running = g.uid === game.uid;
+      if (g.uid !== game.uid) {
+        g.running_executable = null;
+      }
+    });
+    startPlaytimeTimer();
+    addLog('info', `[Auto-Pilot] Active game runner started: ${game.name} (${execPayload.filename})`);
+  } catch (err) {
+    addLog('error', `[Auto-Pilot] Failed to launch game runner for ${game.name}: ${err}`);
+  }
+}
+
 async function handleStartAutoPilot() {
   if (gameList.value.length === 0) return;
   addLog('info', `[Auto-Pilot] Starting rotation for ${gameList.value.length} games (${autoPilotIntervalMinutes.value}m interval)...`);
 
   await startAutoPilot(gameList.value, async (game: Game) => {
     selectedGameId.value = game.uid || null;
-    try {
-      emit('event_disconnect');
-      await invoke('connect_to_discord_rpc_3', {
-        activity_json: JSON.stringify({
-          app_id: game.id,
-          details: game.quest_title || `Playing ${game.name}`,
-          state: 'In Game',
-          timestamp: Math.floor(Date.now() / 1000),
-          activity_kind: 0,
-        }),
-        action: 'connect',
-        target_clients: getSelectedDiscordTargets(),
-      });
-      isConnectedToRPC.value = true;
-      currentlyPlaying.value = game.name;
-      gameList.value.forEach((g) => {
-        g.is_running = g.uid === game.uid;
-      });
-      addLog('info', `[Auto-Pilot] Active game: ${game.name} (${game.id})`);
-    } catch (err) {
-      addLog('error', `[Auto-Pilot] Failed to connect RPC for ${game.name}: ${err}`);
-    }
+    await launchGameForAutoPilot(game);
   });
 }
 
 async function handleStopAutoPilot() {
   await stopAutoPilot(async () => {
-    emit('event_disconnect');
-    setActiveRpcClients([]);
-    isConnectedToRPC.value = false;
     currentlyPlaying.value = null;
-    gameList.value.forEach((g) => {
-      g.is_running = false;
-    });
-    addLog('info', '[Auto-Pilot] Stopped');
+    if (isConnectedToRPC.value) {
+      await stopDiscordRPC();
+    }
+    for (const g of gameList.value) {
+      if (g.is_running) {
+        for (const e of g.executables) {
+          if (e.is_running && e.filename) {
+            try {
+              await invoke('stop_process', { exec_name: e.filename });
+            } catch {}
+            e.is_running = false;
+          }
+        }
+        g.is_running = false;
+      }
+    }
+    stopPlaytimeTimer();
+    addLog('info', '[Auto-Pilot] Stopped all running games');
   });
 }
 
 async function handleSkipAutoPilot() {
   await skipNext(gameList.value, async (game: Game) => {
     selectedGameId.value = game.uid || null;
-    try {
-      emit('event_disconnect');
-      await invoke('connect_to_discord_rpc_3', {
-        activity_json: JSON.stringify({
-          app_id: game.id,
-          details: game.quest_title || `Playing ${game.name}`,
-          state: 'In Game',
-          timestamp: Math.floor(Date.now() / 1000),
-          activity_kind: 0,
-        }),
-        action: 'connect',
-        target_clients: getSelectedDiscordTargets(),
-      });
-      isConnectedToRPC.value = true;
-      currentlyPlaying.value = game.name;
-      gameList.value.forEach((g) => {
-        g.is_running = g.uid === game.uid;
-      });
-      addLog('info', `[Auto-Pilot] Skipped to ${game.name} (${game.id})`);
-    } catch (err) {
-      addLog('error', `[Auto-Pilot] Failed to connect RPC: ${err}`);
-    }
+    await launchGameForAutoPilot(game);
   });
 }
 
@@ -578,6 +767,14 @@ function isGameExecutableInstalled(executable: GameExecutable) {
   return executable.is_installed ?? false;
 }
 
+function isGameRunning(game: Game | null): boolean {
+  if (!game) return false;
+  return Boolean(
+    game.is_running ||
+    (currentlyPlaying.value && (currentlyPlaying.value === game.name || currentlyPlaying.value === game.id))
+  );
+}
+
 function isGameInstalled(game: Game | null) {
   if (!game) return false;
   return game.is_installed ?? false;
@@ -585,23 +782,28 @@ function isGameInstalled(game: Game | null) {
 
 async function createDummyGame(game: Game | null, executable: GameExecutable) {
   if (!game) return false;
-  const gameUid = game.uid;
-  const gameToInstall = gameList.value.find((g) => g.uid === gameUid);
-  const executableItem = gameToInstall?.executables.find((exe) => exe.name === executable.name);
-  if (gameToInstall && executableItem) {
-    const payload = {
-      path: executable.path,
-      executable_name: executable.filename,
-      path_len: executable.segments,
-      app_id: Number(gameToInstall.id),
-      display_name: gameToInstall.name,
-    };
-    await invoke('create_fake_game', payload);
-    gameToInstall.is_installed = true;
+  const gameToInstall = gameList.value.find((g) => (game.uid && g.uid === game.uid) || g.id === game.id) || game;
+  const executableItem = gameToInstall.executables?.find((exe) => exe.name === executable.name || exe.filename === executable.filename) || gameToInstall.executables?.[0];
+
+  const exeFilename = executable.filename || executableItem?.filename || executable.name.split(/[/\\]/).pop() || '';
+  const exePath = executable.path || '';
+  const exeSegments = executable.segments || executable.name.split(/[/\\]/).length;
+
+  const gameIconUrl = getGameIconUrl(gameToInstall);
+  const payload = {
+    path: exePath,
+    executable_name: exeFilename,
+    path_len: exeSegments,
+    app_id: String(gameToInstall.id),
+    display_name: gameToInstall.name,
+    icon_url: gameIconUrl || null,
+  };
+  await invoke('create_fake_game', payload);
+  gameToInstall.is_installed = true;
+  if (executableItem) {
     executableItem.is_installed = true;
-    return true;
   }
-  return false;
+  return true;
 }
 
 async function installAndPlay({ game, executable }: { game: Game; executable: GameExecutable }) {
@@ -619,98 +821,120 @@ async function installAndPlay({ game, executable }: { game: Game; executable: Ga
 
 async function playGame({ game, executable }: { game: Game; executable: GameExecutable }) {
   if (!game) return;
-  const gameUid = game.uid;
+  const gameToPlay = gameList.value.find((g) => (game.uid && g.uid === game.uid) || g.id === game.id) || game;
+  const executableItem = gameToPlay.executables?.find((exe) => exe.name === executable.name) || gameToPlay.executables?.[0];
+
   try {
-    addLog('info', `Playing game: ${game.name}`);
-    currentlyPlaying.value = game.name;
-    const gameToPlay = gameList.value.find((g) => g.uid === gameUid);
-    const executableItem = gameToPlay?.executables.find((exe) => exe.name === executable.name);
+    addLog('info', `Playing game: ${gameToPlay.name}`);
+    currentlyPlaying.value = gameToPlay.name;
+    gameToPlay.running_executable = executable.name;
+    gameToPlay.is_running = true;
 
-    // 1. Directly connect Discord Rich Presence (RPC) via IPC pipe so Discord status displays immediately
+    // 1. Mark ONLY this clicked executable as running, and all others as not running!
+    if (Array.isArray(gameToPlay.executables)) {
+      for (const exe of gameToPlay.executables) {
+        if (exe.name === executable.name) {
+          exe.is_running = true;
+          exe.is_installed = true;
+        } else {
+          // If another executable of this game was running, stop it first
+          if (exe.is_running) {
+            const oldFn = exe.filename || exe.name.split(/[/\\]/).pop();
+            if (oldFn) {
+              invoke('stop_process', { exec_name: oldFn }).catch(() => {});
+            }
+          }
+          exe.is_running = false;
+        }
+      }
+    }
+
+    // 2. Ensure dummy executable is created on disk
     try {
-      const connected = await invoke<string[]>('connect_to_discord_rpc_3', {
-        activity_json: JSON.stringify({
-          app_id: game.id,
-          details: game.quest_title || `Playing ${game.name}`,
-          state: 'In Game',
-          timestamp: Math.floor(Date.now() / 1000),
-          activity_kind: 0,
-        }),
-        action: 'connect',
-        target_clients: getRunningDiscordTargets(),
-      });
-      isConnectedToRPC.value = true;
-      if (connected && connected.length > 0) {
-        setActiveRpcClients(connected);
-      } else {
-        setActiveRpcClients(getRunningDiscordTargets());
-      }
-      addLog('info', `[Discord RPC] Connected Rich Presence for ${game.name} (${game.id})`);
-    } catch (rpcErr) {
-      console.warn('Discord RPC connection warning:', rpcErr);
-      addLog('warning', `[Discord RPC] Connection warning: ${rpcErr}`);
+      await createDummyGame(gameToPlay, executable);
+    } catch (createErr) {
+      console.warn('Dummy game setup note:', createErr);
     }
 
-    // 2. Launch background dummy game process for Windows game detection
-    if (gameToPlay && executableItem) {
-      const payload = {
-        name: game.name,
-        path: executable.path,
-        executable_name: executable.filename,
-        path_len: executable.segments,
-        app_id: Number(gameToPlay.id),
-      };
-      try {
-        await invoke('run_background_process', payload);
-        gameToPlay.is_running = true;
-        executableItem.is_running = true;
-        addLog('info', `[Process] Started background runner: ${executable.filename || game.name}`);
-      } catch (procErr) {
-        console.error('Failed to launch game process:', procErr);
-        addLog('warning', `[Process] Process runner note: ${procErr}`);
-        gameToPlay.is_running = true;
-        executableItem.is_running = true;
-      }
-    }
+    // 3. Launch background dummy game process for Windows game detection (Completes Discord Quest!)
+    const exeFilename = executable.filename || executableItem?.filename || executable.name.split(/[/\\]/).pop() || '';
+    const exePath = executable.path || '';
+    const exeSegments = executable.segments || executable.name.split(/[/\\]/).length;
+    const gameIconUrl = getGameIconUrl(gameToPlay);
+
+    const payload = {
+      name: gameToPlay.name,
+      path: exePath,
+      executable_name: exeFilename,
+      path_len: exeSegments,
+      app_id: String(gameToPlay.id),
+      icon_url: gameIconUrl || null,
+    };
+    await invoke('run_background_process', payload);
+    addLog('info', `[Process] Started game runner (background): ${exeFilename || gameToPlay.name}`);
   } catch (error) {
-    console.error('Failed to launch game:', error);
-    addLog('error', `Failed to launch game: ${error}`);
+    console.error('Failed to launch game process:', error);
+    addLog('warning', `Game runner note: ${error}`);
+  } finally {
+    gameToPlay.is_running = true;
+    startPlaytimeTimer();
+    saveGameList();
   }
 }
 
-async function stopPlaying({ game, executable }: { game: Game; executable: GameExecutable }) {
+async function stopRunningGame(game: Game | null, targetExecutable?: GameExecutable) {
   if (!game) return;
-  const gameUid = game.uid;
+  const gameToStop = gameList.value.find((g) => (game.uid && g.uid === game.uid) || g.id === game.id) || game;
   currentlyPlaying.value = null;
+  gameToStop.running_executable = null;
+  gameToStop.is_running = false;
 
-  // 1. Disconnect Discord RPC
-  try {
-    emit('event_disconnect');
-    setActiveRpcClients([]);
-    isConnectedToRPC.value = false;
-    addLog('info', `[Discord RPC] Disconnected Rich Presence for ${game.name}`);
-  } catch (rpcErr) {
-    console.warn('Error disconnecting RPC:', rpcErr);
+  // 1. Terminate specific executable if provided
+  if (targetExecutable?.filename) {
+    try {
+      await invoke('stop_process', { exec_name: targetExecutable.filename });
+      addLog('info', `[Process] Stopped game process: ${targetExecutable.filename}`);
+    } catch {}
   }
 
-  // 2. Terminate running background game process
-  const gameToPlay = gameList.value.find((g) => g.uid === gameUid);
-  const executableItem = gameToPlay?.executables.find((exe) => exe.name === executable.name);
-  if (gameToPlay && executableItem) {
-    try {
-      if (executable.filename) {
-        await invoke('stop_process', {
-          exec_name: executable.filename,
-        });
-        addLog('info', `[Process] Stopped game process: ${executable.filename}`);
+  // 2. Terminate running background process for all executables of this game
+  if (Array.isArray(gameToStop.executables)) {
+    for (const exe of gameToStop.executables) {
+      exe.is_running = false;
+      const filename = exe.filename || exe.name.split(/[/\\]/).pop() || '';
+      if (filename) {
+        try {
+          await invoke('stop_process', { exec_name: filename });
+          addLog('info', `[Process] Stopped game process: ${filename}`);
+        } catch (err) {
+          console.warn('Error stopping process:', err);
+        }
       }
-    } catch (error) {
-      addLog('error', `Failed to stop game process: ${error}`);
-    } finally {
-      gameToPlay.is_running = false;
-      executableItem.is_running = false;
     }
   }
+
+  // 3. Also terminate fallback clean filename if any
+  const rawName = gameToStop.name || 'Game';
+  const cleanFilename = `${rawName.replace(/[^a-zA-Z0-9_-]/g, '_')}.exe`;
+  try {
+    await invoke('stop_process', { exec_name: cleanFilename });
+  } catch {}
+
+  // 4. Disconnect Discord RPC if no other game is running and RPC was active
+  const anyRunning = gameList.value.some((g) => g.is_running);
+  if (!anyRunning) {
+    if (isConnectedToRPC.value) {
+      await stopDiscordRPC();
+    }
+    stopPlaytimeTimer();
+  } else {
+    saveGameList();
+  }
+  saveGameList();
+}
+
+async function stopPlaying(payload: { game: Game; executable?: GameExecutable }) {
+  await stopRunningGame(payload.game, payload.executable);
 }
 
 async function handleTestRPC(game: Game | null) {
@@ -721,21 +945,9 @@ async function handleTestRPC(game: Game | null) {
     return;
   }
   if (state === 'disconnect' || isConnecting.value) {
-    emit('event_disconnect');
-    setActiveRpcClients([]);
+    await stopDiscordRPC();
     isConnectedToRPC.value = false;
-    if (game) {
-      game.is_running = false;
-      game.executables.forEach((e) => {
-        if (e.filename && e.is_running) {
-          invoke('stop_process', { exec_name: e.filename }).catch(() => {});
-        }
-        e.is_running = false;
-      });
-    }
-    currentlyPlaying.value = null;
     isConnecting.value = false;
-    addLog('info', '[Discord RPC] Disconnected from Discord Gateway');
     return;
   }
   showDialog('rpc_message_1');
@@ -748,33 +960,13 @@ async function continueRPCRisk(game: Game | null) {
   if (gameToTest) {
     isConnecting.value = true;
     try {
-      const connected = await invoke<string[]>('connect_to_discord_rpc_3', {
-        activity_json: JSON.stringify({
-          app_id: gameToTest.id,
-          details: gameToTest.quest_title || `Playing ${gameToTest.name}`,
-          state: 'In Game',
-          timestamp: Math.floor(Date.now() / 1000),
-          activity_kind: 0,
-        }),
-        action: 'connect',
-        target_clients: getRunningDiscordTargets(),
-      });
-      isConnectedToRPC.value = true;
-      if (connected && connected.length > 0) {
-        setActiveRpcClients(connected);
-      } else {
-        setActiveRpcClients(getRunningDiscordTargets());
-      }
-      gameToTest.is_running = true;
-      currentlyPlaying.value = gameToTest.name;
-      isConnecting.value = false;
-      addLog('info', `[Discord RPC] Connected to Discord Gateway with ${gameToTest.name} (${gameToTest.id})`);
+      await startDiscordRPC(gameToTest);
     } catch (err) {
       addLog('error', `RPC Connection error: ${err}`);
+    } finally {
       isConnecting.value = false;
+      hideDialog();
     }
-
-    hideDialog();
   }
 }
 
@@ -786,31 +978,13 @@ function handleSearchBlur() {
   }, 200);
 }
 
-const pendingPlayPayload = ref<{ game: Game; executable: GameExecutable; isInstall?: boolean } | null>(null);
-
-function handlePlayClick(payload: { game: Game; executable: GameExecutable }, isInstall = false) {
-  pendingPlayPayload.value = { ...payload, isInstall };
-  showDialog('rpc_message_1');
-}
-
 async function onAcceptRisk() {
   if (dontShowRpcWarningAgain.value) {
     setSkipRpcWarning(true);
   }
-  if (pendingPlayPayload.value) {
-    const { game, executable, isInstall } = pendingPlayPayload.value;
-    pendingPlayPayload.value = null;
-    hideDialog();
-    if (isInstall) {
-      await installAndPlay({ game, executable });
-    } else {
-      await playGame({ game, executable });
-    }
-  } else {
-    hideDialog();
-    if (selectedGame.value) {
-      await continueRPCRisk(selectedGame.value);
-    }
+  hideDialog();
+  if (selectedGame.value) {
+    await continueRPCRisk(selectedGame.value);
   }
 }
 
@@ -832,7 +1006,6 @@ function hideDialog() {
   dialogRef.value?.close();
   dialogMessage.value = '';
   dialogKey.value = 'none';
-  pendingPlayPayload.value = null;
   isDialogOpen.value = false;
 }
 
@@ -841,6 +1014,7 @@ provide<GameActionsProvider>(GameActionsKey, {
   isGameInstalled,
   isExecutableRunning,
   isGameExecutableInstalled,
+  isGameRunning,
 });
 </script>
 
@@ -1300,17 +1474,66 @@ provide<GameActionsProvider>(GameActionsKey, {
                 </span>
               </div>
 
-              <!-- Running indicator or Auto-Pilot live badge -->
+              <!-- Running indicator or Auto-Pilot live badge or Persisted Playtime badge -->
               <div v-if="game.is_running || (isAutoPilotActive && currentQueueIndex === index)" class="flex items-center gap-1.5 mt-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  {{ isAutoPilotActive && currentQueueIndex === index ? `${t.autoPilotRunningOn} ${formattedRemainingTime}` : t.running }}
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0 ring-4 ring-emerald-500/20"></span>
+                <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 flex-wrap">
+                  <template v-if="isAutoPilotActive && currentQueueIndex === index">
+                    <span>{{ t.autoPilotRunningOn }} {{ formattedRemainingTime }} · {{ formatPlaytime(game.played_seconds || 0) }}</span>
+                  </template>
+                  <template v-else>
+                    <span>{{ t.running }} · {{ formatPlaytime(game.played_seconds || 0) }}</span>
+                  </template>
+                  <span v-if="game.quest_target_minutes && (game.played_seconds || 0) >= game.quest_target_minutes * 60" class="ml-1 text-emerald-500 font-extrabold">
+                    ({{ t.questCompleted }})
+                  </span>
                 </span>
+              </div>
+              <div v-else class="flex items-center gap-1.5 mt-1 group/playtime">
+                <span
+                  class="w-2 h-2 rounded-full shrink-0"
+                  :class="game.quest_target_minutes && (game.played_seconds || 0) >= game.quest_target_minutes * 60 ? 'bg-emerald-500' : ((game.played_seconds || 0) > 0 ? 'bg-indigo-400 dark:bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600')"
+                ></span>
+                <span
+                  class="text-[11px]"
+                  :class="game.quest_target_minutes && (game.played_seconds || 0) >= game.quest_target_minutes * 60 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ((game.played_seconds || 0) > 0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-400 dark:text-slate-500 font-medium')"
+                >
+                  <span v-if="game.quest_target_minutes && (game.played_seconds || 0) >= game.quest_target_minutes * 60">
+                    {{ t.questCompleted }} ({{ formatPlaytime(game.played_seconds || 0) }})
+                  </span>
+                  <span v-else>
+                    {{ formatPlaytime(game.played_seconds || 0) }}
+                  </span>
+                </span>
+                <button
+                  v-if="(game.played_seconds || 0) > 0"
+                  type="button"
+                  @click.stop="resetGamePlaytime(game)"
+                  :title="t.resetPlaytime"
+                  class="opacity-0 group-hover/playtime:opacity-100 transition-opacity p-0.5 rounded text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
               </div>
             </div>
 
-            <!-- Right Actions: Move Up / Down Buttons + Remove Button -->
+            <!-- Right Actions: Stop Button (when running) + Move Up / Down Buttons + Remove Button -->
             <div class="shrink-0 flex items-center gap-1.5 select-none">
+              <!-- Stop Button when game is running -->
+              <button
+                v-if="game.is_running"
+                type="button"
+                @click.stop="stopRunningGame(game)"
+                :title="t.stop"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all shadow-sm cursor-pointer select-none ring-2 ring-rose-500/30"
+              >
+                <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24">
+                  <rect x="5" y="5" width="14" height="14" rx="2" />
+                </svg>
+                <span>{{ t.stop }}</span>
+              </button>
               <!-- Move Up Button -->
               <button
                 type="button"
@@ -1379,9 +1602,9 @@ provide<GameActionsProvider>(GameActionsKey, {
           <div v-if="selectedGame">
             <GameExecutables
               :game="selectedGame"
-              @play="(payload) => handlePlayClick(payload, false)"
+              @play="playGame"
               @stop="stopPlaying"
-              @install_and_play="(payload) => handlePlayClick(payload, true)"
+              @install_and_play="installAndPlay"
             />
           </div>
 
@@ -1409,6 +1632,12 @@ provide<GameActionsProvider>(GameActionsKey, {
                 </svg>
                 <span v-if="currentlyPlaying" class="text-emerald-600 dark:text-emerald-400 font-semibold">
                   {{ t.currentlyPlaying }} {{ currentlyPlaying }}
+                  <span v-if="selectedGame && selectedGame.is_running" class="ml-1 text-emerald-500 font-mono text-[11px]">
+                    ({{ formatPlaytime(selectedGame.played_seconds || 0) }})
+                  </span>
+                </span>
+                <span v-else-if="selectedGame && (selectedGame.played_seconds || 0) > 0" class="text-slate-600 dark:text-slate-300">
+                  {{ t.notPlaying }} · {{ formatPlaytime(selectedGame.played_seconds || 0) }}
                 </span>
                 <span v-else>
                   {{ t.notPlaying }}

@@ -35,3 +35,7 @@ src-tauri/resources/src-darwin
 src-tauri/resources/src-win.exe
 src-tauri/resources/src-linux
 src-tauri/resources/src-macos
+
+# Local dev scripts
+run-dev.bat
+run-dev.ps1

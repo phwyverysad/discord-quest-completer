@@ -50,6 +50,9 @@ export interface Translations {
   noGamesYetDesc: string;
   remove: string;
   running: string;
+  playedTime: string;
+  questCompleted: string;
+  resetPlaytime: string;
   verified: string;
   
   // Game Actions
@@ -252,6 +255,9 @@ const enTranslations: Translations = {
   noGamesYetDesc: 'Use the search bar above to find and add games from the search bar.',
   remove: 'Remove',
   running: 'Running',
+  playedTime: 'Played',
+  questCompleted: 'Quest Completed!',
+  resetPlaytime: 'Reset playtime',
   verified: 'Verified',
 
   gameActionsTitle: 'Game Actions',
@@ -448,6 +454,9 @@ const thTranslations: Translations = {
   noGamesYetDesc: 'ใช้ช่องค้นหาด้านบน เพื่อค้นหาและเพิ่มเกมเข้าสู่รายการของคุณ',
   remove: 'ลบ',
   running: 'กำลังทำงาน',
+  playedTime: 'เล่นไปแล้ว',
+  questCompleted: 'ครบเควสต์แล้ว!',
+  resetPlaytime: 'รีเซ็ตเวลาเล่น',
   verified: 'ยืนยันแล้ว',
 
   gameActionsTitle: 'การทำงานของเกม',
@@ -573,7 +582,7 @@ const thTranslations: Translations = {
   // Discord Status & Clients (Sidebar)
   statusRunning: 'กำลังทำงาน',
   statusOffline: 'ออฟไลน์',
-  statusRpcActive: 'RPC ACTIVE',
+  statusRpcActive: 'RPC ทำงานอยู่',
   discordStatusTitle: 'สถานะ Discord',
   discordStableDesc: 'Discord Stable (เวอร์ชันทางการ)',
   discordPtbDesc: 'Discord Public Test Build (PTB)',
@@ -637,6 +646,9 @@ const jaTranslations: Translations = {
   noGamesYetDesc: '上部の検索バーからゲームを検索してリストに追加してください。',
   remove: '削除',
   running: '実行中',
+  playedTime: 'プレイ時間',
+  questCompleted: 'クエスト達成!',
+  resetPlaytime: 'プレイ時間をリセット',
   verified: '認証済み',
   gameActionsTitle: 'ゲーム操作',
   selectGamePrompt: '左側のリストからゲームを選択してください。',
@@ -693,6 +705,9 @@ const zhTranslations: Translations = {
   noGamesYetDesc: '使用上方搜索栏搜索并添加游戏到您的列表。',
   remove: '移除',
   running: '运行中',
+  playedTime: '已游玩',
+  questCompleted: '任务已完成!',
+  resetPlaytime: '重置游玩时间',
   verified: '已验证',
   gameActionsTitle: '游戏操作',
   selectGamePrompt: '从左侧选择一个游戏以执行操作。',

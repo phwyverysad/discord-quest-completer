@@ -24,6 +24,8 @@ export interface Game {
     third_party_skus?: Array<{ distributor: string; id: string }>;
     quest_title?: string;
     quest_target_minutes?: number;
+    played_seconds?: number;
+    running_executable?: string | null;
 }
 
 export interface GameActionsProvider {
@@ -31,4 +33,5 @@ export interface GameActionsProvider {
   isGameInstalled: (game: Game | null) => boolean;
   isExecutableRunning: (executable: GameExecutable) => boolean;
   isGameExecutableInstalled: (executable: GameExecutable) => boolean;
+  isGameRunning?: (game: Game | null) => boolean;
 }

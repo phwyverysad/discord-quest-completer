@@ -1,14 +1,16 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use once_cell::sync::OnceCell;
+use once_cell::sync::{Lazy, OnceCell};
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use tauri::{path::BaseDirectory, AppHandle, Emitter, Listener, Manager};
+use tauri::{path::BaseDirectory, AppHandle, Emitter, Manager};
 
 mod multi_ipc;
 mod rpc;
 mod runner;
+
+static ACTIVE_PROCESSES: Lazy<Mutex<HashSet<String>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 
 // Global static instance of the Discord client
 static DISCORD_CLIENT: OnceCell<Mutex<Option<rpc::Client>>> = OnceCell::new();
@@ -19,13 +21,13 @@ fn get_discord_client() -> &'static Mutex<Option<rpc::Client>> {
 
 fn runner_resource_name() -> &'static str {
     #[cfg(target_os = "windows")]
-    let runner_name = "data/src-win.exe";
+    let runner_name = "resources/src-win.exe";
 
     #[cfg(target_os = "linux")]
-    let runner_name = "data/src-linux";
+    let runner_name = "resources/src-linux";
 
     #[cfg(target_os = "macos")]
-    let runner_name = "data/src-darwin";
+    let runner_name = "resources/src-darwin";
 
     runner_name
 }
@@ -42,22 +44,84 @@ fn bundle_binary_name(app_name: &str) -> String {
 }
 
 fn get_base_games_dir() -> PathBuf {
+    if let Ok(exe_path) = env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let local_games = exe_dir.join("games");
+            if local_games.exists() || fs::create_dir_all(&local_games).is_ok() {
+                return local_games;
+            }
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    if let Ok(local_app_data) = env::var("LOCALAPPDATA") {
+        let app_games = PathBuf::from(local_app_data)
+            .join("discord-quest-completer")
+            .join("games");
+        if fs::create_dir_all(&app_games).is_ok() {
+            return app_games;
+        }
+    }
+
     env::temp_dir().join("discord-quest-completer").join("games")
 }
 
-fn game_folder_path(path: &str, app_id: i64) -> PathBuf {
+fn parse_app_id_string(app_id: &serde_json::Value) -> String {
+    match app_id {
+        serde_json::Value::String(s) => s.trim().to_string(),
+        serde_json::Value::Number(n) => n.to_string(),
+        _ => "0".to_string(),
+    }
+}
+
+fn game_folder_path(path: &str, app_id: &str) -> PathBuf {
     let normalized_path = Path::new(path).to_string_lossy().to_string();
 
     get_base_games_dir()
-        .join(app_id.to_string())
+        .join(app_id)
         .join(normalized_path)
 }
 
 fn resolve_runner_template(handle: &AppHandle) -> Result<PathBuf, String> {
-    handle
-        .path()
-        .resolve(runner_resource_name(), BaseDirectory::Resource)
-        .map_err(|e| format!("Failed to resolve runner template: {}", e))
+    let candidates = [
+        runner_resource_name(),
+        "resources/src-win.exe",
+        "data/src-win.exe",
+        "src-win.exe",
+    ];
+
+    for rel in candidates {
+        if let Ok(path) = handle.path().resolve(rel, BaseDirectory::Resource) {
+            if path.exists() {
+                return Ok(path);
+            }
+        }
+    }
+
+    if let Ok(exe_path) = env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let local_res = exe_dir.join("resources").join("src-win.exe");
+            if local_res.exists() {
+                return Ok(local_res);
+            }
+            let local_data = exe_dir.join("data").join("src-win.exe");
+            if local_data.exists() {
+                return Ok(local_data);
+            }
+        }
+    }
+
+    let dev_res = PathBuf::from("resources/src-win.exe");
+    if dev_res.exists() {
+        return Ok(dev_res);
+    }
+
+    let dev_target = PathBuf::from("../src-win/target/release/src-win.exe");
+    if dev_target.exists() {
+        return Ok(dev_target);
+    }
+
+    Err("Failed to resolve runner template executable".to_string())
 }
 
 fn make_macos_app_bundle(
@@ -140,17 +204,77 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+fn convert_png_to_ico(png_bytes: &[u8]) -> Vec<u8> {
+    let mut ico = Vec::with_capacity(22 + png_bytes.len());
+    // ICONDIR: reserved=0, type=1 (ICO), count=1
+    ico.extend_from_slice(&[0, 0, 1, 0, 1, 0]);
+    // ICONDIRENTRY (16 bytes):
+    ico.push(0); // width (0 = 256 or auto)
+    ico.push(0); // height (0 = 256 or auto)
+    ico.push(0); // color count
+    ico.push(0); // reserved
+    ico.extend_from_slice(&1u16.to_le_bytes()); // planes (1)
+    ico.extend_from_slice(&32u16.to_le_bytes()); // bpp (32)
+    ico.extend_from_slice(&(png_bytes.len() as u32).to_le_bytes()); // size
+    ico.extend_from_slice(&22u32.to_le_bytes()); // offset (22)
+    ico.extend_from_slice(png_bytes);
+    ico
+}
+
+async fn prepare_game_icon(game_folder: &Path, icon_url: Option<&str>) -> Option<PathBuf> {
+    let icon_path = game_folder.join("game_icon.ico");
+    if icon_path.exists() && fs::metadata(&icon_path).map(|m| m.len() > 0).unwrap_or(false) {
+        return Some(icon_path);
+    }
+
+    if let Some(url) = icon_url {
+        if !url.trim().is_empty() {
+            let client = tauri_plugin_http::reqwest::Client::builder()
+                .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .build()
+                .ok();
+            if let Some(c) = client {
+                if let Ok(resp) = c.get(url.trim()).send().await {
+                    if resp.status().is_success() {
+                        if let Ok(bytes) = resp.bytes().await {
+                            if !bytes.is_empty() {
+                                let is_already_ico = bytes.starts_with(&[0, 0, 1, 0]);
+                                let final_bytes = if is_already_ico {
+                                    bytes.to_vec()
+                                } else {
+                                    convert_png_to_ico(&bytes)
+                                };
+                                let _ = fs::write(&icon_path, final_bytes);
+                                if icon_path.exists() {
+                                    return Some(icon_path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if icon_path.exists() {
+        Some(icon_path)
+    } else {
+        None
+    }
+}
+
 #[tauri::command(rename_all = "snake_case")]
 async fn create_fake_game(
     handle: tauri::AppHandle,
     path: &str,
     executable_name: &str,
     _path_len: i64,
-    app_id: i64,
+    app_id: serde_json::Value,
     display_name: Option<String>,
+    icon_url: Option<String>,
 ) -> Result<String, String> {
-    // Must create in the same directory as the executable to avoid permission issues
-    let game_folder_path = game_folder_path(path, app_id);
+    let app_id_str = parse_app_id_string(&app_id);
+    let game_folder_path = game_folder_path(path, &app_id_str);
 
     println!("Game folder path: {:?}", game_folder_path);
     println!(
@@ -164,6 +288,9 @@ async fn create_fake_game(
         }
         Err(e) => return Err(format!("Failed to create game folder: {}", e)),
     };
+
+    // Pre-download game icon to game folder if available
+    let _ = prepare_game_icon(&game_folder_path, icon_url.as_deref()).await;
 
     let resource_path = resolve_runner_template(&handle)?;
     println!("Creating dummy game executable from: {:?}", resource_path);
@@ -229,13 +356,18 @@ fn launch_macos_app_bundle(app_bundle_path: &Path, title: &str) -> Result<(), St
 
 #[tauri::command(rename_all = "snake_case")]
 async fn run_background_process(
+    handle: tauri::AppHandle,
     name: &str,
     path: &str,
     executable_name: &str,
     _path_len: i64,
-    app_id: i64,
+    app_id: serde_json::Value,
+    icon_url: Option<String>,
 ) -> Result<String, String> {
-    let game_folder_path = game_folder_path(path, app_id);
+    let app_id_str = parse_app_id_string(&app_id);
+    let game_folder_path = game_folder_path(path, &app_id_str);
+
+    let icon_file = prepare_game_icon(&game_folder_path, icon_url.as_deref()).await;
 
     if is_app_bundle(executable_name) {
         #[cfg(target_os = "macos")]
@@ -254,18 +386,31 @@ async fn run_background_process(
 
     let executable_path = launch_executable_path(&game_folder_path, executable_name);
     
-    let mut cmd = std::process::Command::new(&executable_path);
-    cmd.args(["--title", name])
-       .current_dir(game_folder_path);
-    
-    // Platform-specific process spawning
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-        cmd.creation_flags(CREATE_NO_WINDOW);
+    // Automatically prepare or update dummy executable if missing or outdated
+    if let Ok(_) = fs::create_dir_all(&game_folder_path) {
+        if let Ok(resource_path) = resolve_runner_template(&handle) {
+            let needs_copy = match fs::metadata(&executable_path) {
+                Ok(meta) => match fs::metadata(&resource_path) {
+                    Ok(res_meta) => meta.len() != res_meta.len(),
+                    Err(_) => false,
+                },
+                Err(_) => true,
+            };
+            if needs_copy {
+                let _ = fs::copy(&resource_path, &executable_path);
+            }
+        }
     }
 
+    let mut cmd = std::process::Command::new(&executable_path);
+    cmd.args(["--title", name]);
+    if let Some(ref ico) = icon_file {
+        cmd.args(["--icon", &ico.to_string_lossy()]);
+    }
+    cmd.current_dir(&game_folder_path);
+    
+
+    // Platform-specific process spawning
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -273,13 +418,74 @@ async fn run_background_process(
     }
     
     match cmd.spawn() {
-        Ok(_) => Ok("Process started successfully".to_string()),
+        Ok(_) => {
+            if let Ok(mut set) = ACTIVE_PROCESSES.lock() {
+                set.insert(executable_name.to_string());
+            }
+            Ok("Process started successfully".to_string())
+        }
         Err(e) => Err(format!("Failed to start process: {}", e)),
     }
 }
 
+pub fn terminate_all_background_processes() {
+    let procs = {
+        if let Ok(mut set) = ACTIVE_PROCESSES.lock() {
+            let items: Vec<String> = set.drain().collect();
+            items
+        } else {
+            Vec::new()
+        }
+    };
+
+    for exec_name in procs {
+        let process_name = stop_process_name(&exec_name);
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            let _ = std::process::Command::new("taskkill")
+                .creation_flags(CREATE_NO_WINDOW)
+                .arg("/F")
+                .arg("/IM")
+                .arg(&process_name)
+                .output();
+        }
+        #[cfg(target_os = "macos")]
+        {
+            if is_app_bundle(&exec_name) {
+                let bundle_pattern = format!("{}/Contents/MacOS", exec_name);
+                let _ = std::process::Command::new("pkill")
+                    .arg("-f")
+                    .arg(&bundle_pattern)
+                    .output();
+            }
+            let _ = std::process::Command::new("pkill")
+                .arg("-x")
+                .arg(&process_name)
+                .output();
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let _ = std::process::Command::new("pkill")
+                .arg("-f")
+                .arg(&exec_name)
+                .output();
+        }
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn stop_all_processes() -> Result<(), String> {
+    terminate_all_background_processes();
+    Ok(())
+}
+
 #[tauri::command(rename_all = "snake_case")]
 async fn stop_process(exec_name: String) -> Result<(), String> {
+    if let Ok(mut set) = ACTIVE_PROCESSES.lock() {
+        set.remove(&exec_name);
+    }
     let process_name = stop_process_name(&exec_name);
 
     #[cfg(target_os = "windows")]
@@ -355,7 +561,8 @@ async fn stop_process(exec_name: String) -> Result<(), String> {
 
 /// Usage: Calling from JS:
 /// ```javascript
-/// await invoke('connect_to_discord_rpc_3', json, 'connect' | 'disconnect');
+/// await invoke('connect_to_discord_rpc_3', { activity_json, action: 'connect' | 'disconnect' });
+/// ```
 #[tauri::command(rename_all = "snake_case")]
 async fn connect_to_discord_rpc_3(
     handle: AppHandle,
@@ -365,7 +572,6 @@ async fn connect_to_discord_rpc_3(
 ) -> Result<Vec<String>, String> {
     let event_connecting = "client_connecting";
     let event_connected = "client_connected";
-    let event_disconnect = "event_disconnect";
 
     let activity = match runner::parse_activity_json(&activity_json) {
         Ok(a) => a,
@@ -382,37 +588,36 @@ async fn connect_to_discord_rpc_3(
         "app_id": app_id,
     });
 
-    {
-        let mut client_guard = get_discord_client().lock().unwrap();
-        client_guard.take();
-    }
-
     handle
         .emit(event_connecting, connecting_payload)
         .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
 
     let mut act_map = serde_json::Map::new();
     if let Some(details) = &activity.details {
-        act_map.insert("details".to_string(), serde_json::json!(details));
+        if !details.is_empty() {
+            act_map.insert("details".to_string(), serde_json::Value::String(details.clone()));
+        }
     }
     if let Some(state) = &activity.state {
-        act_map.insert("state".to_string(), serde_json::json!(state));
+        if !state.is_empty() {
+            act_map.insert("state".to_string(), serde_json::Value::String(state.clone()));
+        }
     }
     if let Some(ts) = activity.timestamp {
-        act_map.insert("timestamps".to_string(), serde_json::json!({ "start": ts }));
+        let mut timestamps = serde_json::Map::new();
+        timestamps.insert("start".to_string(), serde_json::Value::Number(ts.into()));
+        act_map.insert("timestamps".to_string(), serde_json::Value::Object(timestamps));
     }
-    let act_kind = activity.activity_kind.unwrap_or(0);
-    act_map.insert("type".to_string(), serde_json::json!(act_kind));
-
-    if let Some(key) = &activity.large_image_key {
-        let mut assets = serde_json::Map::new();
-        assets.insert("large_image".to_string(), serde_json::json!(key));
-        if let Some(txt) = &activity.large_image_text {
-            assets.insert("large_text".to_string(), serde_json::json!(txt));
+    if let Some(img_key) = &activity.large_image_key {
+        if !img_key.is_empty() {
+            let mut assets = serde_json::Map::new();
+            assets.insert("large_image".to_string(), serde_json::Value::String(img_key.clone()));
+            if let Some(img_text) = &activity.large_image_text {
+                assets.insert("large_text".to_string(), serde_json::Value::String(img_text.clone()));
+            }
+            act_map.insert("assets".to_string(), serde_json::Value::Object(assets));
         }
-        act_map.insert("assets".to_string(), serde_json::Value::Object(assets));
     }
-
     let activity_val = serde_json::Value::Object(act_map);
 
     let connected_clients = multi_ipc::set_multi_activity(&app_id, activity_val, &targets).await;
@@ -427,44 +632,14 @@ async fn connect_to_discord_rpc_3(
             .emit(event_connected, connected_payload)
             .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
 
-        handle.listen(event_disconnect, move |_| {
-            println!("Disconnecting from Discord RPC (multi_ipc)");
-            let _ = tauri::async_runtime::spawn(async move {
-                multi_ipc::disconnect_all().await;
-            });
-        });
-
         Ok(connected_clients)
     } else {
         // Fallback to discord-sdk
         match runner::set_activity(activity_json).await {
             Ok(client) => {
-                let st = check_discord_clients();
-                let mut running_targets = Vec::new();
-                if targets.is_empty() {
-                    if st.stable { running_targets.push("Stable".to_string()); }
-                    if st.ptb { running_targets.push("PTB".to_string()); }
-                    if st.canary { running_targets.push("Canary".to_string()); }
-                } else {
-                    for t in &targets {
-                        let tl = t.to_lowercase();
-                        if (tl == "stable" && st.stable)
-                            || (tl == "ptb" && st.ptb)
-                            || (tl == "canary" && st.canary)
-                        {
-                            running_targets.push(t.clone());
-                        }
-                    }
-                }
-                if running_targets.is_empty() {
-                    if st.stable { running_targets.push("Stable".to_string()); }
-                    else if st.ptb { running_targets.push("PTB".to_string()); }
-                    else if st.canary { running_targets.push("Canary".to_string()); }
-                }
-
                 let connected_payload = serde_json::json!({
                     "app_id": app_id,
-                    "active_clients": running_targets,
+                    "active_clients": vec!["Discord"],
                 });
 
                 {
@@ -476,20 +651,7 @@ async fn connect_to_discord_rpc_3(
                     .emit(event_connected, connected_payload)
                     .unwrap_or_else(|e| eprintln!("Failed to emit event: {}", e));
 
-                handle.listen(event_disconnect, move |_| {
-                    let _ = tauri::async_runtime::spawn(async move {
-                        multi_ipc::disconnect_all().await;
-                        let client_opt = {
-                            let mut client_guard = get_discord_client().lock().unwrap();
-                            client_guard.take()
-                        };
-                        if let Some(client) = client_opt {
-                            client.discord.disconnect().await;
-                        }
-                    });
-                });
-
-                Ok(running_targets)
+                Ok(vec!["Discord".to_string()])
             }
             Err(e) => {
                 eprintln!("Failed to set activity: {}", e);
@@ -502,6 +664,20 @@ async fn connect_to_discord_rpc_3(
             }
         }
     }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn disconnect_discord_rpc(handle: AppHandle) -> Result<(), String> {
+    multi_ipc::disconnect_all().await;
+    let client_option = {
+        let mut client_guard = get_discord_client().lock().unwrap();
+        client_guard.take()
+    };
+    if let Some(client) = client_option {
+        let _ = client.discord.disconnect().await;
+    }
+    let _ = handle.emit("event_disconnect", ());
+    Ok(())
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -755,11 +931,21 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|_window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                terminate_all_background_processes();
+                tauri::async_runtime::spawn(async {
+                    multi_ipc::disconnect_all().await;
+                });
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             create_fake_game,
             stop_process,
+            stop_all_processes,
             connect_to_discord_rpc_3,
+            disconnect_discord_rpc,
             run_background_process,
             fetch_gamelist_gh_mirror,
             fetch_gamelist_from_discord,
@@ -773,4 +959,29 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_discord_rpc() {
+        let payload = serde_json::json!({
+            "app_id": "1402418087793528862",
+            "details": "Playing Risk of Rain 2",
+            "state": "In Game",
+            "timestamp": 1729000000
+        });
+        println!("Testing set_activity with Discord...");
+        match runner::set_activity(payload.to_string()).await {
+            Ok(_client) => {
+                println!("SUCCESSFULLY CONNECTED TO DISCORD RPC AND SET ACTIVITY!");
+                tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            }
+            Err(e) => {
+                println!("FAILED TO SET ACTIVITY: {}", e);
+            }
+        }
+    }
 }

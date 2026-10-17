@@ -36,13 +36,12 @@ https://github.com/user-attachments/assets/855b96be-8e35-4083-8735-f9754e9376c7
 ---
 
 ## Downloads
-Download the latest version from [GitHub Releases](https://github.com/phwyverysad/discord-quest-completer/releases/latest):
+Download the latest version from the [releases folder](./releases) or [GitHub Releases](https://github.com/phwyverysad/discord-quest-completer/releases/latest):
 
 | File | Size | Type |
 | :--- | :---: | :--- |
-| **`Discord Quest Completer_1.0.0_x64-setup.exe`** | **~5.8 MB** | **Standard Installer (Setup)** Installs to the system and creates a desktop shortcut. |
-| **`discord-quest-completer.exe`** | **~19 MB** | **Standalone Portable Executable** Runs immediately without installation. |
-| **`Discord Quest Completer_1.0.0_x64_en-US.msi`** | **~7.9 MB** | **Windows Package (MSI)** System-wide installer for Windows environments. |
+| [**`Discord-Quest-Completer-Setup-1.0.0.exe`**](./releases/Discord-Quest-Completer-Setup-1.0.0.exe) | **~5.8 MB** | **Standard Installer (Setup)** Installs to the system and creates a desktop shortcut. |
+| [**`discord-quest-completer-portable.exe`**](./releases/discord-quest-completer-portable.exe) | **~19 MB** | **Standalone Portable Executable** Runs immediately without installation. |
 
 > **Security (VirusTotal)**: Verified 100% clean and malware-free. View full scan results at [VirusTotal Scan Report](https://www.virustotal.com/gui/file/3f8559ede61b9930c1896b09a8fc8a87d0fe1905c5a8910396d40ae2595c507d?nocache=1).
 

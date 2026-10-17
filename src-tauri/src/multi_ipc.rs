@@ -45,7 +45,7 @@ pub async fn disconnect_all() {
             buf.extend_from_slice(&1u32.to_le_bytes());
             buf.extend_from_slice(&(clear_msg.len() as u32).to_le_bytes());
             buf.extend_from_slice(clear_msg.as_bytes());
-            let _ = tokio::time::timeout(Duration::from_millis(200), pipe.writer.write_all(&buf)).await;
+            let _ = tokio::time::timeout(Duration::from_millis(300), pipe.writer.write_all(&buf)).await;
         }
     }
     #[cfg(not(target_os = "windows"))]
@@ -94,7 +94,7 @@ pub async fn set_multi_activity(
                 h_buf.extend_from_slice(&(handshake_json.len() as u32).to_le_bytes());
                 h_buf.extend_from_slice(handshake_json.as_bytes());
 
-                if tokio::time::timeout(Duration::from_millis(1200), writer.write_all(&h_buf))
+                if tokio::time::timeout(Duration::from_millis(1500), writer.write_all(&h_buf))
                     .await
                     .is_err()
                 {
@@ -103,7 +103,7 @@ pub async fn set_multi_activity(
 
                 // Read Handshake response header (8 bytes)
                 let mut header = [0u8; 8];
-                if tokio::time::timeout(Duration::from_millis(1200), reader.read_exact(&mut header))
+                if tokio::time::timeout(Duration::from_millis(1500), reader.read_exact(&mut header))
                     .await
                     .is_err()
                 {
@@ -117,7 +117,7 @@ pub async fn set_multi_activity(
                 }
 
                 let mut resp_buf = vec![0u8; resp_len];
-                if tokio::time::timeout(Duration::from_millis(1200), reader.read_exact(&mut resp_buf))
+                if tokio::time::timeout(Duration::from_millis(1500), reader.read_exact(&mut resp_buf))
                     .await
                     .is_err()
                 {
@@ -162,7 +162,7 @@ pub async fn set_multi_activity(
                 a_buf.extend_from_slice(&(act_msg.len() as u32).to_le_bytes());
                 a_buf.extend_from_slice(act_msg.as_bytes());
 
-                if tokio::time::timeout(Duration::from_millis(1200), writer.write_all(&a_buf))
+                if tokio::time::timeout(Duration::from_millis(1500), writer.write_all(&a_buf))
                     .await
                     .is_err()
                 {

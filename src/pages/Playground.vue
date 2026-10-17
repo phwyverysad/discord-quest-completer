@@ -55,11 +55,6 @@ function discordTest() {
     return;
   }
 
-  const targets: string[] = [];
-  if (discordTargets.value.stable) targets.push('Stable');
-  if (discordTargets.value.ptb) targets.push('PTB');
-  if (discordTargets.value.canary) targets.push('Canary');
-
   try {
     invoke('connect_to_discord_rpc_3', {
       activity_json: JSON.stringify({
@@ -70,7 +65,6 @@ function discordTest() {
         timestamp: Math.floor(Date.now() / 1000) - 3600,
       }),
       action: 'connect',
-      target_clients: targets.length > 0 ? targets : ['Stable', 'PTB', 'Canary'],
     });
     isConnected.value = true;
     addLog('info', `Connected to Discord RPC with App ID: ${appId.value}`);
