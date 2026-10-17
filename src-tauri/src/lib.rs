@@ -82,6 +82,11 @@ fn game_folder_path(path: &str, app_id: &str) -> PathBuf {
         .join(normalized_path)
 }
 
+#[cfg(target_os = "windows")]
+const EMBEDDED_RUNNER: &[u8] = include_bytes!("../resources/src-win.exe");
+#[cfg(not(target_os = "windows"))]
+const EMBEDDED_RUNNER: &[u8] = &[];
+
 fn resolve_runner_template(handle: &AppHandle) -> Result<PathBuf, String> {
     let candidates = [
         runner_resource_name(),
@@ -100,18 +105,22 @@ fn resolve_runner_template(handle: &AppHandle) -> Result<PathBuf, String> {
 
     if let Ok(exe_path) = env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
-            let local_res = exe_dir.join("resources").join("src-win.exe");
+            let local_res = exe_dir.join("resources").join(runner_resource_name());
             if local_res.exists() {
                 return Ok(local_res);
             }
-            let local_data = exe_dir.join("data").join("src-win.exe");
+            let local_data = exe_dir.join("data").join(runner_resource_name());
             if local_data.exists() {
                 return Ok(local_data);
+            }
+            let local_same = exe_dir.join(runner_resource_name());
+            if local_same.exists() {
+                return Ok(local_same);
             }
         }
     }
 
-    let dev_res = PathBuf::from("resources/src-win.exe");
+    let dev_res = PathBuf::from(format!("resources/{}", runner_resource_name()));
     if dev_res.exists() {
         return Ok(dev_res);
     }
@@ -119,6 +128,26 @@ fn resolve_runner_template(handle: &AppHandle) -> Result<PathBuf, String> {
     let dev_target = PathBuf::from("../src-win/target/release/src-win.exe");
     if dev_target.exists() {
         return Ok(dev_target);
+    }
+
+    // Direct embedded fallback: If running in standalone portable mode without external resources,
+    // write the embedded runner binary to the games runner directory.
+    if !EMBEDDED_RUNNER.is_empty() {
+        let runner_dir = get_base_games_dir().join("_runner");
+        let _ = fs::create_dir_all(&runner_dir);
+        let embedded_path = runner_dir.join(runner_resource_name());
+        let needs_write = match fs::metadata(&embedded_path) {
+            Ok(meta) => meta.len() != EMBEDDED_RUNNER.len() as u64,
+            Err(_) => true,
+        };
+        if needs_write {
+            if let Err(e) = fs::write(&embedded_path, EMBEDDED_RUNNER) {
+                eprintln!("[runner] Failed to extract embedded runner: {}", e);
+            }
+        }
+        if embedded_path.exists() {
+            return Ok(embedded_path);
+        }
     }
 
     Err("Failed to resolve runner template executable".to_string())
@@ -313,26 +342,37 @@ async fn create_fake_game(
     }
 
     let target_executable_path = game_folder_path.join(executable_name);
-    match fs::copy(&resource_path, &target_executable_path) {
-        Ok(_) => {
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                let mut perms = std::fs::metadata(&target_executable_path)
-                    .map_err(|e| format!("Failed to get file metadata: {}", e))?
-                    .permissions();
-                perms.set_mode(0o755);
-                std::fs::set_permissions(&target_executable_path, perms)
-                    .map_err(|e| format!("Failed to set executable permissions: {}", e))?;
-            }
-
-            Ok(format!(
-                "Dummy executable copied to: {:?}",
-                target_executable_path
-            ))
-        }
-        Err(e) => Err(format!("Failed to copy dummy executable: {}", e)),
+    if let Some(parent) = target_executable_path.parent() {
+        let _ = fs::create_dir_all(parent);
     }
+
+    let copied = match resolve_runner_template(&handle) {
+        Ok(resource_path) => fs::copy(&resource_path, &target_executable_path).is_ok(),
+        Err(_) => false,
+    };
+
+    if !copied && !EMBEDDED_RUNNER.is_empty() {
+        if let Err(e) = fs::write(&target_executable_path, EMBEDDED_RUNNER) {
+            return Err(format!("Failed to write embedded dummy executable: {}", e));
+        }
+    } else if !copied && !target_executable_path.exists() {
+        return Err("Failed to copy or extract dummy executable".to_string());
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(perms_meta) = std::fs::metadata(&target_executable_path) {
+            let mut perms = perms_meta.permissions();
+            perms.set_mode(0o755);
+            let _ = std::fs::set_permissions(&target_executable_path, perms);
+        }
+    }
+
+    Ok(format!(
+        "Dummy executable copied to: {:?}",
+        target_executable_path
+    ))
 }
 
 #[cfg(target_os = "macos")]
@@ -387,19 +427,34 @@ async fn run_background_process(
     let executable_path = launch_executable_path(&game_folder_path, executable_name);
     
     // Automatically prepare or update dummy executable if missing or outdated
-    if let Ok(_) = fs::create_dir_all(&game_folder_path) {
-        if let Ok(resource_path) = resolve_runner_template(&handle) {
-            let needs_copy = match fs::metadata(&executable_path) {
-                Ok(meta) => match fs::metadata(&resource_path) {
-                    Ok(res_meta) => meta.len() != res_meta.len(),
-                    Err(_) => false,
-                },
-                Err(_) => true,
-            };
-            if needs_copy {
-                let _ = fs::copy(&resource_path, &executable_path);
+    if let Some(parent) = executable_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    let mut ready = false;
+    if let Ok(resource_path) = resolve_runner_template(&handle) {
+        let needs_copy = match fs::metadata(&executable_path) {
+            Ok(meta) => match fs::metadata(&resource_path) {
+                Ok(res_meta) => meta.len() != res_meta.len(),
+                Err(_) => false,
+            },
+            Err(_) => true,
+        };
+        if needs_copy {
+            if fs::copy(&resource_path, &executable_path).is_ok() {
+                ready = true;
             }
+        } else {
+            ready = true;
         }
+    }
+
+    if (!ready || !executable_path.exists()) && !EMBEDDED_RUNNER.is_empty() {
+        let _ = fs::write(&executable_path, EMBEDDED_RUNNER);
+    }
+
+    if !executable_path.exists() {
+        return Err(format!("Runner executable not found at {:?}", executable_path));
     }
 
     let mut cmd = std::process::Command::new(&executable_path);
